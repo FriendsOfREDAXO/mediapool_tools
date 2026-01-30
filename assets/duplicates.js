@@ -82,7 +82,9 @@ $(document).on('rex:ready', function () {
     }
 
     function hideProgressModal() {
-        $('#dup-progress-modal').modal('hide').remove();
+        $('#dup-progress-modal').modal('hide').data('bs.modal', null);
+        $('#dup-progress-modal').remove();
+        $('.modal-backdrop').remove();
     }
 
     function updateProgress(percent) {
