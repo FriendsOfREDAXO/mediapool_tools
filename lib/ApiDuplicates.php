@@ -22,7 +22,7 @@ class ApiDuplicates extends rex_api_function
                 $this->processBatch();
                 break;
             case 'get_result':
-                $this->getResult();
+                $this->fetchResult();
                 break;
             default:
                 throw new \rex_api_exception('Unknown action');
@@ -47,7 +47,7 @@ class ApiDuplicates extends rex_api_function
         exit;
     }
 
-    private function getResult() {
+    private function fetchResult() {
         $batchId = rex_request('batchId', 'string');
         $data = DuplicateAnalysis::getLastResult($batchId);
         
