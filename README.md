@@ -48,13 +48,7 @@ Findet identische Dateien im Medienpool basierend auf Dateigröße und Inhalt (M
 
 ## Konfiguration
 
-Standardwerte für den Bulk-Resize können in der `package.yml` angepasst werden (Default: 2000x2000px):
-
-```yaml
-config:
-    image-max-width: 2000
-    image-max-height: 2000
-```
+Die Einstellungen für den Bulk-Resize (z.B. maximale Breite/Höhe) sowie Grenzwerte für die Analyse können bequem über die **Einstellungen**-Seite im AddOn konfiguriert werden.
 
 ## Hinweise zur Sicherheit
 

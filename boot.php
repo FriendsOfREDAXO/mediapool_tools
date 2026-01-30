@@ -28,7 +28,7 @@ if (rex::isBackend() && rex::getUser()) {
             if (rex::getUser()->hasPerm('mediapool_tools[bulk_rework]')) {
                 $tools->addSubpage((new rex_be_page('bulk_rework', $addon->i18n('bulk_rework_title')))
                     ->setSubPath($addon->getPath('pages/bulk_rework.php'))
-                    ->setIcon('rex-icon fa-crop')
+                    ->setIcon('rex-icon fa-minimize')
                 );
                 $added = true;
             }
@@ -44,7 +44,7 @@ if (rex::isBackend() && rex::getUser()) {
             if (rex::getUser()->hasPerm('mediapool_tools[duplicates]')) {
                 $tools->addSubpage((new rex_be_page('duplicates', $addon->i18n('duplicates_title')))
                     ->setSubPath($addon->getPath('pages/duplicates.php'))
-                    ->setIcon('rex-icon fa-clone')
+                    ->setIcon('rex-icon fa-images')
                 );
                 $added = true;
             }
