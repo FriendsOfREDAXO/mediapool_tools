@@ -8,6 +8,14 @@ use FriendsOfRedaxo\MediapoolTools\UnusedMediaAnalysis;
 $lastResult = UnusedMediaAnalysis::getLastResult();
 $hasResult = $lastResult !== null;
 
+// Pass translations to JS
+echo '<script>
+var mediapool_tools_i18n = {
+    processing: "' . $addon->i18n('unused_media_processing') . '",
+    please_wait: "' . $addon->i18n('unused_media_please_wait') . '"
+};
+</script>';
+
 // Info Header
 echo '<div class="panel panel-info" id="unused-media-container">
     <div class="panel-heading">' . $addon->i18n('unused_media_info_title') . '</div>

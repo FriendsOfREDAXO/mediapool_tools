@@ -39,6 +39,8 @@ mediapool_tools_unused_media_btn_delete = Löschen
 mediapool_tools_unused_media_force_delete = Verwendung ignorieren
 mediapool_tools_unused_media_btn_protect = Als geschützt markieren
 mediapool_tools_media_protected_warning = Datei "%s" ist durch Mediapool Tools geschützt.
+mediapool_tools_unused_media_processing = Verarbeite Daten...
+mediapool_tools_unused_media_please_wait = <strong>Bitte warten...</strong><br>Dies kann je nach Anzahl der Dateien einen Moment dauern.
 
 
 mediapool_tools_config = Einstellungen

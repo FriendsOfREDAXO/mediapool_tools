@@ -181,9 +181,9 @@ $(document).on('rex:ready', function (event, element) {
         showProgressModal();
         
         // Switch to spinner layout for indeterminate operations
-        $('#scan-progress-modal .modal-title').text('Verarbeite Daten...');
+        $('#scan-progress-modal .modal-title').text(mediapool_tools_i18n.processing);
         $('#scan-progress-modal .progress').replaceWith('<div class="text-center" style="margin-bottom: 20px; color: #3bb594;"><i class="rex-icon fa-spinner fa-spin fa-3x"></i></div>');
-        $('#scan-status-text').html('<strong>Bitte warten...</strong><br>Dies kann je nach Anzahl der Dateien einen Moment dauern.');
+        $('#scan-status-text').html(mediapool_tools_i18n.please_wait);
         
         $.ajax({
             url: window.location.pathname + '?rex-api-call=mediapool_tools_unused_media',
