@@ -7,10 +7,12 @@ if (rex::isBackend() && rex::getUser()) {
     rex_perm::register('mediapool_tools[config]');
     rex_perm::register('mediapool_tools[bulk_rework]');
     rex_perm::register('mediapool_tools[unused_media]');
+    rex_perm::register('mediapool_tools[duplicates]');
 
     // API explizit registrieren
     rex_api_function::register('mediapool_tools_bulk_process', FriendsOfRedaxo\MediapoolTools\ApiBulkProcess::class);
     rex_api_function::register('mediapool_tools_unused_media', FriendsOfRedaxo\MediapoolTools\ApiUnusedMedia::class);
+    rex_api_function::register('mediapool_tools_duplicates', FriendsOfRedaxo\MediapoolTools\ApiDuplicates::class);
     
     // Subpages in Mediapool einhängen
     rex_extension::register('PAGES_PREPARED', function () {
@@ -35,6 +37,14 @@ if (rex::isBackend() && rex::getUser()) {
                 $tools->addSubpage((new rex_be_page('unused_media', $addon->i18n('unused_media_title')))
                     ->setSubPath($addon->getPath('pages/unused_media.php'))
                     ->setIcon('rex-icon fa-search')
+                );
+                $added = true;
+            }
+
+            if (rex::getUser()->hasPerm('mediapool_tools[duplicates]')) {
+                $tools->addSubpage((new rex_be_page('duplicates', $addon->i18n('duplicates_title')))
+                    ->setSubPath($addon->getPath('pages/duplicates.php'))
+                    ->setIcon('rex-icon fa-clone')
                 );
                 $added = true;
             }

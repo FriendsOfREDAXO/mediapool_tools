@@ -60,5 +60,13 @@ mediapool_tools_config_min_height_notice = Optional: Mark/Search images higher t
 
 mediapool_tools_tools_title = Tools
 
+mediapool_tools_duplicates_title = Duplicate File Finder
+mediapool_tools_duplicates_scan_heading = Find Duplicates
+mediapool_tools_duplicates_description = This tool compares the file size and MD5 hash of all files in the media pool to find exact copies. This helps to uncover redundancies.
+mediapool_tools_duplicates_btn_start = Start Search
+mediapool_tools_duplicates_analyzing = Analyzing files for equality...
+mediapool_tools_duplicates_found_heading = Duplicates found
+mediapool_tools_duplicates_no_duplicates = No duplicates found.
+
 filesize = File size
 createdate = Created on
