@@ -48,7 +48,14 @@ class ApiDuplicates extends rex_api_function
         }
 
         $result = DuplicateAnalysis::mergeFiles($keep, $replace);
-        rex_response::sendJson(['success' => true, 'data' => $result]);
+
+        $msg = \rex_addon::get('mediapool_tools')->i18n('duplicates_merge_success', $result['deleted_files'], $result['replaced_refs']);
+        if (!empty($result['log'])) {
+             // Optional: Be strict about showing logs if errors occurred?
+             // $msg .= "\n\n" . implode("\n", $result['log']);
+        }
+
+        rex_response::sendJson(['success' => true, 'data' => $result, 'message' => $msg]);
         exit;
     }
 
@@ -81,6 +88,21 @@ class ApiDuplicates extends rex_api_function
         if (empty($data['duplicates'])) {
             $html = '<div class="alert alert-info">'.\rex_addon::get('mediapool_tools')->i18n('duplicates_no_duplicates').'</div>';
         } else {
+            // Calculate stats
+            $totalGroups = count($data['duplicates']);
+            $totalFiles = 0;
+            $redundantFiles = 0;
+            foreach ($data['duplicates'] as $files) {
+                $count = count($files);
+                $totalFiles += $count;
+                $redundantFiles += ($count - 1);
+            }
+
+            $html .= '<div class="alert alert-warning" style="margin-bottom: 20px;">';
+            $html .= '<strong>'.\rex_addon::get('mediapool_tools')->i18n('duplicates_summary_title').'</strong><br>';
+            $html .= \rex_addon::get('mediapool_tools')->i18n('duplicates_summary_text', $totalGroups, $totalFiles, $redundantFiles);
+            $html .= '</div>';
+
             foreach ($data['duplicates'] as $hash => $files) {
                 // Ensure unique ID for form
                 $groupId = substr($hash, 0, 8);
@@ -88,7 +110,7 @@ class ApiDuplicates extends rex_api_function
                 $html .= '<div class="panel panel-warning" id="group-'.$groupId.'"><div class="panel-heading">Hash: '.$hash.' ('.count($files).' '.\rex_addon::get('mediapool_tools')->i18n('duplicates_files').')</div>
                 <div class="panel-body">
                     <p>'.\rex_addon::get('mediapool_tools')->i18n('duplicates_group_instruction').'</p>
-                    <form class="duplicate-group-form" data-group="'.$groupId.'">
+                    <form class="duplicate-group-form" data-group="'.$groupId.'" onsubmit="return false;">
                     <ul class="list-group">';
                 
                 foreach ($files as $index => $file) {

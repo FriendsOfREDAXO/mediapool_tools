@@ -14,7 +14,7 @@ $(document).on('rex:ready', function () {
         showProgressModal();
         
         $.ajax({
-            url: window.location.pathname + '?rex-api-call=mediapool_tools_duplicates',
+            url: 'index.php?rex-api-call=mediapool_tools_duplicates',
             method: 'POST',
             data: { action: 'start_scan' },
             success: function (res) {
@@ -30,7 +30,7 @@ $(document).on('rex:ready', function () {
 
     function processBatch(batchId) {
         $.ajax({
-            url: window.location.pathname + '?rex-api-call=mediapool_tools_duplicates',
+            url: 'index.php?rex-api-call=mediapool_tools_duplicates',
             method: 'POST',
             data: { action: 'process_batch', batchId: batchId },
             success: function (res) {
@@ -54,7 +54,7 @@ $(document).on('rex:ready', function () {
 
     function showResults(batchId) {
         $.ajax({
-             url: window.location.pathname + '?rex-api-call=mediapool_tools_duplicates',
+             url: 'index.php?rex-api-call=mediapool_tools_duplicates',
              method: 'POST',
              data: { action: 'get_result', batchId: batchId },
              success: function (res) {
@@ -92,15 +92,17 @@ $(document).on('rex:ready', function () {
              $btn.prop('disabled', true).text('Merge...');
              
              $.ajax({
-                 url: window.location.pathname + '?rex-api-call=mediapool_tools_duplicates',
+                 url: 'index.php?rex-api-call=mediapool_tools_duplicates',
                  method: 'POST',
                  data: { action: 'merge_files', keep: keep, replace: replace },
                  success: function (res) {
                      if (res.success) {
-                         // Remove group from UI
-                         $form.closest('.panel').fadeOut(500, function() { $(this).remove(); });
-                         // Show success message somewhere?
-                         // Maybe toast?
+                         // Show success message
+                         var $successAlert = $('<div class="alert alert-success">' + res.message + '</div>');
+                         $form.closest('.panel').replaceWith($successAlert);
+                         
+                         // Optional: Fade out alert after some time?
+                         // setTimeout(function() { $successAlert.fadeOut(); }, 5000);
                      } else {
                          alert('Error: ' + res.message);
                          $btn.prop('disabled', false).text(originalText);
@@ -130,6 +132,7 @@ $(document).on('rex:ready', function () {
         $('#dup-progress-modal').modal('hide').data('bs.modal', null);
         $('#dup-progress-modal').remove();
         $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('padding-right', '');
     }
 
     function updateProgress(percent) {

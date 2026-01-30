@@ -171,6 +171,8 @@ class DuplicateAnalysis
             }
         }
         
+        rex_delete_cache();
+
         return [
             'replaced_refs' => $countReplaced,
             'deleted_files' => $countDeleted,
@@ -183,90 +185,96 @@ class DuplicateAnalysis
         $count = 0;
         $sql = rex_sql::factory();
         
-        // 1. Slices - Media & Medialist
-        // rex_article_slice
-        
-        // Single Media Columns (media1 - media10)
-        for ($i = 1; $i <= 10; $i++) {
-            $sql->setQuery('UPDATE ' . rex::getTable('article_slice') . ' SET media'.$i.' = ? WHERE media'.$i.' = ?', [$new, $old]);
-            $count += $sql->getRows();
-        }
-        
-        // Media List Columns (medialist1 - medialist10)
-        // This is complex. We fetch rows containing the file and update via PHP to be safe.
-        for ($i = 1; $i <= 10; $i++) {
-            $col = 'medialist'.$i;
-            $rows = $sql->getArray('SELECT id, '.$col.' FROM ' . rex::getTable('article_slice') . ' WHERE FIND_IN_SET(?, '.$col.')', [$old]);
+        // Tables to exclude from scanning
+        $ignoredTables = [
+            rex::getTable('media'),         // Do not replace in the media pool table itself (we delete the old entry later)
+            rex::getTable('media_category'),// Usually doesn't contain filenames, but if so, safe to ignore? Or safe to replace? Let's check logic.
+                                            // IDs are used. Path names? No.
+            // rex::getTable('user'),       // Users might have avatar fields? If so, we SHOULD replace.
             
-            foreach ($rows as $row) {
-                $files = explode(',', $row[$col]);
-                $pos = array_search($old, $files);
-                if ($pos !== false) {
-                    $files[$pos] = $new;
-                    // Remove duplicates if new file is already in list?
-                    // $files = array_unique($files); // Better not change logic too much
-                    $newVal = implode(',', $files);
-                    
-                    $upd = rex_sql::factory();
-                    $upd->setQuery('UPDATE ' . rex::getTable('article_slice') . ' SET '.$col.' = ? WHERE id = ?', [$newVal, $row['id']]);
-                    if ($upd->getRows()) $count++;
-                }
-            }
-        }
+            // System-internal tables we probably shouldn't mess with blindly
+            rex::getTable('logging'),
+            rex::getTable('action'),        // Contains PHP code. Modifying code is advanced.
+                                            // Use Case: Hardcoded image in action? Rare.
+                                            // Risk: Breaking code signatures or logic.
+                                            // Decision: Include it. If the image is hardcoded, it's dead anyway if we delete the file.
+        ];
         
-        // Values (Rely on String Replace strictly for now, but only on value columns)
-        // Values can contain the filename in Textile/HTML.
-        // E.g. "index.php?rex_media_file=old.jpg"
-        for ($i = 1; $i <= 20; $i++) {
-             $col = 'value'.$i;
-             // We do a simple Replace.
-             // Risk: "my_old.jpg" matches "old.jpg".
-             // We can try to be specific? No, in Text fields we assume the user wants to replace all occurrences.
-             // But we should use REPLACE(val, 'old.jpg', 'new.jpg')
-             $query = 'UPDATE ' . rex::getTable('article_slice') . ' SET '.$col.' = REPLACE('.$col.', ?, ?) WHERE '.$col.' LIKE ?';
-             $sql->setQuery($query, [$old, $new, '%'.$old.'%']);
-             $count += $sql->getRows();
-        }
+        $tables = rex_sql::factory()->getTablesAndViews();
 
-        // 2. Meta Info (yform tables or rex_metainfo tables?)
-        // Core has rex_metainfo management.
-        // We scan all tables that contain 'file' or 'image' or 'media' in column name?
-        // Or better: Check known metainfo definitions.
-        
-        if (rex::isBackend() && \rex_addon::get('metainfo')->isAvailable()) {
-            // Find fields of type REX_MEDIA_WIDGET (6) or REX_MEDIALIST_WIDGET (7)
-            $fields = $sql->getArray('SELECT name, type_id FROM '.rex::getTable('metainfo_field').' WHERE type_id IN (6, 7)');
-            
-            foreach ($fields as $field) {
-                $colName = $field['name'];
-                // Table depends on prefix: art_, cat_, med_, clang_
-                $prefix = substr($colName, 0, 4);
-                $table = '';
-                if ($prefix === 'art_') $table = rex::getTable('article');
-                if ($prefix === 'cat_') $table = rex::getTable('article'); // categories share table with articles
-                if ($prefix === 'med_') $table = rex::getTable('media');
-                if ($prefix === 'clan') $table = rex::getTable('clang');
-                
-                if ($table) {
-                    if ($field['type_id'] == 6) { // Single Media
-                         $sql->setQuery('UPDATE ' . $table . ' SET '.$colName.' = ? WHERE '.$colName.' = ?', [$new, $old]);
-                         $count += $sql->getRows();
-                    } elseif ($field['type_id'] == 7) { // Media List
-                        $rows = $sql->getArray('SELECT id, '.$colName.' FROM ' . $table . ' WHERE FIND_IN_SET(?, '.$colName.')', [$old]);
-                        foreach ($rows as $row) {
-                            $files = explode(',', $row[$colName]);
-                            $pos = array_search($old, $files);
-                            if ($pos !== false) {
-                                $files[$pos] = $new;
-                                $newVal = implode(',', $files);
-                                $upd = rex_sql::factory();
-                                $upd->setQuery('UPDATE ' . $table . ' SET '.$colName.' = ? WHERE id = ?', [$newVal, $row['id']]);
-                                if ($upd->getRows()) $count++;
-                            }
-                        }
-                    }
-                }
-            }
+        foreach ($tables as $table) {
+             if (in_array($table, $ignoredTables)) continue;
+             
+             // Determine Primary Key for updates
+             $pkResult = $sql->getArray("SHOW KEYS FROM ".$sql->escapeIdentifier($table)." WHERE Key_name = 'PRIMARY'");
+             $pkName = '';
+             if (count($pkResult) > 0) {
+                 $pkName = $pkResult[0]['Column_name'];
+             } else {
+                 // Tables without internal Primary Key (rare in REDAXO).
+                 // We can try using unique index or just skip safe updating?
+                 // Or we use LIMIT 1 with all current values in WHERE? Too complex.
+                 // Skip tables without PK.
+                 continue;
+             }
+
+             // Get String Columns
+             $columns = rex_sql::factory()->showColumns($table);
+             
+             foreach ($columns as $column) {
+                 $colName = $column['name'];
+                 $type = strtolower($column['type']);
+                 
+                 // Process matches in string-like columns
+                 if (
+                     strpos($type, 'char') !== false || 
+                     strpos($type, 'text') !== false || 
+                     strpos($type, 'blob') !== false
+                 ) {
+                     // 1. Find candidates (Optimization)
+                     // Use simple LIKE query to find rows that *might* contain the file
+                     // This reduces the number of PHP regex operations significantly
+                     $candidateSql = rex_sql::factory();
+                     $query = 'SELECT '.$candidateSql->escapeIdentifier($pkName).', '.$candidateSql->escapeIdentifier($colName).' 
+                               FROM '.$candidateSql->escapeIdentifier($table).' 
+                               WHERE '.$candidateSql->escapeIdentifier($colName).' LIKE ?';
+                     
+                     $rows = $candidateSql->getArray($query, ['%'.$old.'%']);
+                     
+                     foreach ($rows as $row) {
+                         $currentVal = $row[$colName];
+                         
+                         // 2. Precise Regex Replacement
+                         // Avoid partial matches (e.g. replacing 'foo.jpg' inside 'my_foo.jpg')
+                         // Allowed chars in filenames: alphanumeric, ., _, -
+                         // Look for $old surrounded by non-filename-chars (or start/end of string)
+                         
+                         $regex = '/(?<![a-zA-Z0-9._+-])' . preg_quote($old, '/') . '(?![a-zA-Z0-9._+-])/';
+                         
+                         $newVal = preg_replace($regex, $new, $currentVal);
+                         
+                         if ($newVal !== null && $newVal !== $currentVal) {
+                             // 3. Update Row
+                             $upd = rex_sql::factory();
+                             $upd->setTable($table);
+                             $upd->setWhere([$pkName => $row[$pkName]]);
+                             $upd->setValue($colName, $newVal);
+                             
+                             try {
+                                 $upd->update();
+                                 // Add metadata for history if needed (e.g., updated_at). 
+                                 // Or just trust REDAXO's internal handling (if via Dataset).
+                                 // Since we use raw SQL via rex_sql, timestamps aren't auto-updated unless trigger exists.
+                                 // This is acceptable for a maintenance tool.
+                                 $count++;
+                             } catch (\Exception $e) {
+                                 // Ignore update errors (e.g. constraints)
+                                 // But maybe log them?
+                             }
+                         }
+                     }
+                 }
+             }
         }
 
         return $count;
