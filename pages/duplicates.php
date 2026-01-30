@@ -2,8 +2,6 @@
 
 $addon = rex_addon::get('mediapool_tools');
 
-echo rex_view::title($addon->i18n('duplicates_title'));
-
 echo '<div class="panel panel-default" id="duplicates-app">
     <div class="panel-heading">' . $addon->i18n('duplicates_scan_heading') . '</div>
     <div class="panel-body">

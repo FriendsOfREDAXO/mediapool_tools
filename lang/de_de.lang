@@ -68,5 +68,9 @@ mediapool_tools_duplicates_analyzing = Untersuche Dateien auf Gleichheit...
 mediapool_tools_duplicates_found_heading = Duplikate gefunden
 mediapool_tools_duplicates_no_duplicates = Keine Duplikate gefunden.
 
+mediapool_tools_duplicates_files = Dateien
+mediapool_tools_duplicates_group_instruction = Wählen Sie die Datei aus, die behalten werden soll. Alle anderen Versionen werden in der Datenbank durch diese ersetzt und anschließend gelöscht.
+mediapool_tools_duplicates_btn_merge = Auswahl behalten & Duplikate ersetzen/löschen
+
 filesize = Dateigröße
 createdate = Erstellt am

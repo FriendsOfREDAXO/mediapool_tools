@@ -61,11 +61,56 @@ $(document).on('rex:ready', function () {
                  if (res.success) {
                      $resultDiv.show().html(res.html);
                      $btnStart.prop('disabled', false);
+                     initMergeButtons();
                  } else {
                      handleError('Error fetching results');
                  }
              },
              error: function () { handleError('Network error'); }
+        });
+    }
+
+    function initMergeButtons() {
+        $('.duplicate-group-form').on('submit', function(e) {
+             e.preventDefault();
+             var $form = $(this);
+             var keep = $form.find('input[name="keep"]:checked').val();
+             var allFiles = [];
+             $form.find('input[name="files[]"]').each(function() {
+                 allFiles.push($(this).val());
+             });
+             
+             // Remove keep from replace list
+             var replace = allFiles.filter(function(file) { return file !== keep; });
+             
+             if (!confirm('Sind Sie sicher? ' + replace.length + ' Dateien werden gelöscht und durch "' + keep + '" ersetzt.')) {
+                 return;
+             }
+             
+             var $btn = $form.find('button[type="submit"]');
+             var originalText = $btn.text();
+             $btn.prop('disabled', true).text('Merge...');
+             
+             $.ajax({
+                 url: window.location.pathname + '?rex-api-call=mediapool_tools_duplicates',
+                 method: 'POST',
+                 data: { action: 'merge_files', keep: keep, replace: replace },
+                 success: function (res) {
+                     if (res.success) {
+                         // Remove group from UI
+                         $form.closest('.panel').fadeOut(500, function() { $(this).remove(); });
+                         // Show success message somewhere?
+                         // Maybe toast?
+                     } else {
+                         alert('Error: ' + res.message);
+                         $btn.prop('disabled', false).text(originalText);
+                     }
+                 },
+                 error: function () { 
+                     alert('Network Error');
+                     $btn.prop('disabled', false).text(originalText);
+                 }
+             });
         });
     }
 
