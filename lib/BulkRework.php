@@ -313,27 +313,28 @@ class BulkRework
             $results[] = $result;
         }
         
-        $updates = [
-            'processQueue' => $remainingQueue,
-            'currentFiles' => [],
-            'processed' => $batchStatus['processed'] + count($results)
-        ];
+        $currentSuccessful = $batchStatus['successful'] ?? 0;
+        $currentSkipped = $batchStatus['skipped'] ?? [];
+        $currentErrors = $batchStatus['errors'] ?? [];
         
         foreach ($results as $result) {
             if ($result['success']) {
-                $updates['successful'] = ($batchStatus['successful'] ?? 0) + 1;
+                $currentSuccessful++;
             } elseif ($result['skipped']) {
-                $updates['skipped'] = array_merge(
-                    $batchStatus['skipped'] ?? [], 
-                    [$result['filename'] => $result['reason']]
-                );
+                $currentSkipped[$result['filename']] = $result['reason'];
             } else {
-                $updates['errors'] = array_merge(
-                    $batchStatus['errors'] ?? [], 
-                    [$result['filename'] => $result['error'] ?? 'Unbekannter Fehler']
-                );
+                $currentErrors[$result['filename']] = $result['error'] ?? 'Unbekannter Fehler';
             }
         }
+        
+        $updates = [
+            'processQueue' => $remainingQueue,
+            'currentFiles' => [],
+            'processed' => $batchStatus['processed'] + count($results),
+            'successful' => $currentSuccessful,
+            'skipped' => $currentSkipped,
+            'errors' => $currentErrors
+        ];
         
         self::updateBatchStatus($batchId, $updates);
         
