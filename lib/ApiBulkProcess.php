@@ -63,6 +63,13 @@ class ApiBulkProcess extends rex_api_function
         $maxWidth = rex_request('maxWidth', 'int', 0);
         $maxHeight = rex_request('maxHeight', 'int', 0);
 
+        if ($maxWidth === 0) {
+            $maxWidth = null;
+        }
+        if ($maxHeight === 0) {
+            $maxHeight = null;
+        }
+
         if (empty($filenames)) {
             return ['error' => 'No files provided'];
         }

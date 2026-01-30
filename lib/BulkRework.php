@@ -425,7 +425,8 @@ class BulkRework
             return false;
         }
         
-        if (is_null($maxWidth) || is_null($maxHeight)) {
+        // Wenn keine Maße übergeben wurden, Standardwerte aus Config nehmen
+        if ((is_null($maxWidth) || $maxWidth === 0) && (is_null($maxHeight) || $maxHeight === 0)) {
             $maxWidth = (int)rex_addon::get('mediapool_tools')->getConfig('image-max-width', 0);
             $maxHeight = (int)rex_addon::get('mediapool_tools')->getConfig('image-max-height', 0);
         }
@@ -565,7 +566,8 @@ class BulkRework
             return false;
         }
         
-        if (is_null($maxWidth) || is_null($maxHeight)) {
+        // Wenn keine Maße übergeben wurden, Standardwerte aus Config nehmen
+        if ((is_null($maxWidth) || $maxWidth === 0) && (is_null($maxHeight) || $maxHeight === 0)) {
             $maxWidth = (int)rex_addon::get('mediapool_tools')->getConfig('image-max-width', 0);
             $maxHeight = (int)rex_addon::get('mediapool_tools')->getConfig('image-max-height', 0);
         }
