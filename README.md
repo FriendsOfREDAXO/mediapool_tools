@@ -2,6 +2,10 @@
 
 Eine Sammlung nützlicher Werkzeuge zur Wartung und Bereinigung des REDAXO Medienpools.
 
+*   **Unused Media Finder**: Finden und Löschen unbenutzter Dateien.
+*   **Duplicate Finder**: Finden und Zusammenführen doppelter Dateien.
+*   **Bulk Resize**: Nachträgliche Massen-Skalierung von Bildern.
+
 ## Funktionen
 
 ### 1. Unused Media Finder (Unbenutzte Medien)
@@ -26,6 +30,16 @@ Skaliert nachträglich Bilder im Medienpool, die definierte Maximalmaße übersc
 *   Ideal um "Altlasten" zu optimieren.
 *   Grenzwerte für Breite/Höhe konfigurierbar.
 *   Zeigt Einsparungspotential an.
+
+### 3. Duplicate Finder (Doppelte Dateien)
+Findet identische Dateien im Medienpool basierend auf Dateigröße und Inhalt (MD5-Hash).
+
+**Features:**
+*   **Exakte Analyse**: Vergleicht Dateien nicht nur visuell, sondern binär auf Gleichheit.
+*   **Merge (Zusammenführen)**: Wählen Sie die Datei aus, die Sie behalten möchten. Alle Duplikate werden gelöscht, und **sämtliche Verweise in der Datenbank** werden automatisch auf die verbleibende Datei umgebogen.
+    *   Der Scanner durchsucht dabei, ähnlich wie der "Unused Media Finder", alle Tabellen nach Vorkommen des Dateinamens.
+*   **Sicher**: Cache wird nach dem Vorgang automatisch geleert, damit Änderungen sofort sichtbar sind.
+*   **Übersichtlich**: Gruppierte Darstellung aller Duplikate inkl. Vorschau und Link zum Medienpool.
 
 ## Installation
 

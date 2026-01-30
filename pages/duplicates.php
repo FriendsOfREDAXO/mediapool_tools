@@ -10,7 +10,7 @@ echo '<div class="panel panel-default" id="duplicates-app">
     </div>
 </div>';
 
-echo '<div id="duplicates-result" style="display:none;"></div>';
+echo '<div id="duplicates-result" style="display:none; max-height: 75vh; overflow-y: auto; margin-top: 20px; border: 1px solid #ddd; padding: 15px; background: #f9f9f9;"></div>';
 
 // Translations for JS
 echo '<script>

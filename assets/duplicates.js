@@ -129,10 +129,10 @@ $(document).on('rex:ready', function () {
     }
 
     function hideProgressModal() {
-        $('#dup-progress-modal').modal('hide').data('bs.modal', null);
-        $('#dup-progress-modal').remove();
+        $('#dup-progress-modal').modal('hide');
         $('.modal-backdrop').remove();
-        $('body').removeClass('modal-open').css('padding-right', '');
+        $('#dup-progress-modal').remove();
+        $('body').removeClass('modal-open').css('padding-right', '').css('overflow', '');
     }
 
     function updateProgress(percent) {
