@@ -1,0 +1,17 @@
+package: mediapool_tools
+version: '1.0.0'
+author: Thomas
+supportpage: https://github.com/FriendsOfREDAXO/mediapool_tools
+description: 'Tools für den Mediapool: Bulk-Resize, Unused Media Finder und mehr'
+
+requires:
+    redaxo: '^5.13.0'
+
+config:
+    image-max-width: 2000
+    image-max-height: 2000
+    bulk-max-parallel: 3
+    bulk-rework-hits-per-page: 200
+    search-min-size-mb: 0
+    search-min-width: 0
+    search-min-height: 0

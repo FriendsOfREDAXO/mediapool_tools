@@ -1,0 +1,62 @@
+mediapool_tools_title = Mediapool Tools
+mediapool_tools_bulk_rework_title = Stapelverarbeitung für nachträgliche Bildoptimierung
+mediapool_tools_bulk_rework_current_settings = Aktuelle Einstellungen: max. Breite = <b>%spx</b> | max. Höhe = <b>%spx</b>
+mediapool_tools_bulk_rework_table_title = Bilder im Medienpool, deren Bildgröße die konfigurierten Limits überschreitet
+mediapool_tools_bulk_rework_table_hits = Suchtreffer
+mediapool_tools_bulk_rework_table_num_hits_per_page = Treffer pro Seite
+mediapool_tools_bulk_rework_table_column_filesize = Größe [kB]
+mediapool_tools_bulk_rework_table_column_width = Breite [px]
+mediapool_tools_bulk_rework_table_column_height = Höhe [px]
+mediapool_tools_bulk_rework_table_column_category = Kategorie
+mediapool_tools_bulk_rework_table_no_rows = Keine Medien-Dateien gefunden, die den Suchkriterien entsprechen.
+mediapool_tools_bulk_rework_table_select_toggle = alle Einträge der aktuellen Seite auswählen/abwählen
+mediapool_tools_bulk_rework_submit = %s Datei(en) nachträglich bearbeiten
+mediapool_tools_bulk_rework_search_media_category = Kategorie
+mediapool_tools_bulk_rework_search_media_category_placeholder = einzeln oder Komma-getrennt
+mediapool_tools_bulk_rework_search_submit = Suchen
+mediapool_tools_bulk_rework_search_reset = Zurücksetzen
+mediapool_tools_bulk_rework_success = <b>%s</b> Bilddatei(en) wurden erfolgreich angepasst.
+mediapool_tools_bulk_rework_async_processing = Verarbeitung läuft asynchron im Hintergrund
+mediapool_tools_bulk_rework_format_not_supported = Format wird nicht unterstützt
+mediapool_tools_bulk_rework_format_needs_imagemagick = Format benötigt ImageMagick
+mediapool_tools_bulk_rework_processing_completed = Verarbeitung abgeschlossen
+mediapool_tools_bulk_rework_processing_error = Verarbeitungsfehler
+mediapool_tools_bulk_rework_config_hint = Bitte konfigurieren Sie maximale Bildbreite und -höhe in den AddOn-Einstellungen oder der package.yml, damit der Bulk-Resize funktioniert.
+
+mediapool_tools_list_no_rows = Keine Einträge gefunden.
+mediapool_tools_unused_media_title = Unbenutzte Medien Finder
+mediapool_tools_unused_media_info_title = Analyse
+mediapool_tools_unused_media_info_text = Dieses Tool durchsucht die gesamte Datenbank nach Links auf Dateien im Medienpool. Dateien, die nicht in Texten, Modulen oder Meta-Infos gefunden werden, werden aufgelistet. Bitte beachten Sie, dass dynamisch zusammengebaute Dateinamen eventuell nicht erkannt werden.
+mediapool_tools_unused_media_btn_start = Analyse starten
+mediapool_tools_unused_media_btn_restart = Analyse neu starten
+mediapool_tools_unused_media_last_scan = Letzter Scan: %s
+mediapool_tools_unused_media_no_files_found = Keine unbenutzten Medien gefunden.
+mediapool_tools_unused_media_result_title = %s unbenutzte Dateien gefunden (von %s gesamt)
+mediapool_tools_unused_media_selected = ausgewählt
+mediapool_tools_unused_media_target_category = Ziel-Kategorie
+mediapool_tools_unused_media_btn_move = Verschieben
+mediapool_tools_unused_media_btn_delete = Löschen
+mediapool_tools_unused_media_force_delete = Verwendung ignorieren
+mediapool_tools_unused_media_btn_protect = Als geschützt markieren
+mediapool_tools_media_protected_warning = Datei "%s" ist durch Mediapool Tools geschützt.
+
+
+mediapool_tools_config = Einstellungen
+mediapool_tools_config_resize_label = Bulk-Resize Konfiguration (Standardwerte)
+mediapool_tools_config_max_width = Maximale Breite (px)
+mediapool_tools_config_max_width_notice = Standardzielgröße für die Skalierung, falls nicht anders beim Prozess angegeben.
+mediapool_tools_config_max_height = Maximale Höhe (px)
+mediapool_tools_config_max_height_notice = Standardzielgröße für die Skalierung.
+mediapool_tools_config_search_label = Große Dateien Analyse
+mediapool_tools_config_min_size = Warn-Grenzwert Dateigröße (MB)
+mediapool_tools_config_min_size_notice = Dateien oberhalb dieses wertes werden in der Analyse gesondert hervorgehoben (0 = deaktiviert).
+
+mediapool_tools_config_min_width = Min. Breite für Suche (px)
+mediapool_tools_config_min_width_notice = Optional: Markiere/Suche Bilder die breiter sind als dieser Wert (0 = deaktiviert).
+mediapool_tools_config_min_height = Min. Höhe für Suche (px)
+mediapool_tools_config_min_height_notice = Optional: Markiere/Suche Bilder die höher sind als dieser Wert (0 = deaktiviert).
+
+mediapool_tools_tools_title = Tools
+
+filesize = Dateigröße
+createdate = Erstellt am
