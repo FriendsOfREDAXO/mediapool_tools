@@ -44,7 +44,7 @@ Findet identische Dateien im Medienpool basierend auf Dateigröße und Inhalt (M
 ## Installation
 
 1.  Paket installieren und aktivieren.
-2.  Die Tools finden sich im Hauptmenü unter "Mediapool Tools".
+2.  Die Tools finden sich im Hauptmenü unter "Tools" im Medienpool.
 
 ## Konfiguration
 
