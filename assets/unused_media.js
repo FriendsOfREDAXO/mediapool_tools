@@ -180,6 +180,8 @@ $(document).on('rex:ready', function (event, element) {
     function performAction(action, data, cb) {
         showProgressModal();
         $('#scan-status-text').text('Führe Aktion aus...');
+        // Indeterminate state for single actions
+        $('#scan-progress-modal .progress-bar').css('width', '100%').addClass('progress-bar-striped active').text('');
         
         $.ajax({
             url: window.location.pathname + '?rex-api-call=mediapool_tools_unused_media',
