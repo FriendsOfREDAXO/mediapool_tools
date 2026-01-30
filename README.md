@@ -58,13 +58,3 @@ Siehe LICENSE.md (MIT)
 
 * http://www.redaxo.org
 * https://github.com/FriendsOfREDAXO
-
-## Credits
-
-**Project Lead**
-
-[Thomas Skerbis](https://github.com/skerbis)
-
-**Thanks to:**
-
-Code & Implementation: [GitHub Copilot](https://github.com/features/copilot)
