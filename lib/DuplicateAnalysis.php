@@ -130,6 +130,26 @@ class DuplicateAnalysis
         rex_file::put($file, json_encode($data));
     }
 
+    public static function getTablesForSearch(): array
+    {
+        $sql = rex_sql::factory();
+        // Tables to exclude from scanning
+        $ignoredTables = [
+            rex::getTable('media'),         // Do not replace in the media pool table itself (we delete the old entry later)
+            rex::getTable('media_category'),// Usually doesn't contain filenames
+            rex::getTable('logging'),
+        ];
+        
+        $tables = rex_sql::factory()->getTablesAndViews();
+        $candidates = [];
+
+        foreach ($tables as $table) {
+             if (in_array($table, $ignoredTables)) continue;
+             $candidates[] = $table;
+        }
+        return $candidates;
+    }
+
     /**
      * @param string $keepFilename
      * @param array $replaceFilenames
@@ -137,27 +157,39 @@ class DuplicateAnalysis
      */
     public static function mergeFiles(string $keepFilename, array $replaceFilenames): array
     {
-        $log = [];
+        // Deprecated single-call method kept for compatibility if needed, 
+        // but essentially we should use the step-by-step approach now.
+        // For now, let's just loop over all tables locally to mimic old behavior if called directly.
+        $tables = self::getTablesForSearch();
         $countReplaced = 0;
+        
+        foreach ($tables as $table) {
+            $countReplaced += self::processTable($table, $keepFilename, $replaceFilenames);
+        }
+        
+        // Delete files
+        $deleteResult = self::deleteFiles($keepFilename, $replaceFilenames);
+
+        return [
+            'replaced_refs' => $countReplaced,
+            'deleted_files' => $deleteResult['deleted_files'],
+            'log' => $deleteResult['log']
+        ];
+    }
+
+    public static function deleteFiles(string $keepFilename, array $replaceFilenames): array
+    {
+        $log = [];
         $countDeleted = 0;
 
         foreach ($replaceFilenames as $oldFilename) {
             if ($oldFilename === $keepFilename) continue;
-
-            // 1. Replace usages
-            $replaced = self::replaceMediaUsage($oldFilename, $keepFilename);
-            $countReplaced += $replaced;
             
-            // 2. Delete file
+            // Delete file
             try {
                 \rex_media_service::deleteMedia($oldFilename);
                 $countDeleted++;
             } catch (\Exception $e) {
-                // If deletion fails (e.g. because we just replaced usages but checks still fail?), try force delete
-                // Usually deleteMedia checks usage. Since we replaced usage, it SHOULD work.
-                // However, if we missed some usage, it fails.
-                // In that case, we force delete from DB.
-                
                 $sql = rex_sql::factory();
                 $sql->setQuery('DELETE FROM '.rex::getTable('media').' WHERE filename = ?', [$oldFilename]);
                 if ($sql->getRows() > 0) {
@@ -174,109 +206,74 @@ class DuplicateAnalysis
         rex_delete_cache();
 
         return [
-            'replaced_refs' => $countReplaced,
             'deleted_files' => $countDeleted,
             'log' => $log
         ];
     }
 
-    private static function replaceMediaUsage(string $old, string $new): int
-    {
+    public static function processTable(string $table, string $keep, array $replaceFilenames): int {
         $count = 0;
         $sql = rex_sql::factory();
-        
-        // Tables to exclude from scanning
-        $ignoredTables = [
-            rex::getTable('media'),         // Do not replace in the media pool table itself (we delete the old entry later)
-            rex::getTable('media_category'),// Usually doesn't contain filenames, but if so, safe to ignore? Or safe to replace? Let's check logic.
-                                            // IDs are used. Path names? No.
-            // rex::getTable('user'),       // Users might have avatar fields? If so, we SHOULD replace.
-            
-            // System-internal tables we probably shouldn't mess with blindly
-            rex::getTable('logging'),
-            rex::getTable('action'),        // Contains PHP code. Modifying code is advanced.
-                                            // Use Case: Hardcoded image in action? Rare.
-                                            // Risk: Breaking code signatures or logic.
-                                            // Decision: Include it. If the image is hardcoded, it's dead anyway if we delete the file.
-        ];
-        
-        $tables = rex_sql::factory()->getTablesAndViews();
 
-        foreach ($tables as $table) {
-             if (in_array($table, $ignoredTables)) continue;
-             
-             // Determine Primary Key for updates
-             $pkResult = $sql->getArray("SHOW KEYS FROM ".$sql->escapeIdentifier($table)." WHERE Key_name = 'PRIMARY'");
-             $pkName = '';
-             if (count($pkResult) > 0) {
-                 $pkName = $pkResult[0]['Column_name'];
-             } else {
-                 // Tables without internal Primary Key (rare in REDAXO).
-                 // We can try using unique index or just skip safe updating?
-                 // Or we use LIMIT 1 with all current values in WHERE? Too complex.
-                 // Skip tables without PK.
-                 continue;
-             }
-
-             // Get String Columns
-             $columns = rex_sql::factory()->showColumns($table);
-             
-             foreach ($columns as $column) {
-                 $colName = $column['name'];
-                 $type = strtolower($column['type']);
-                 
-                 // Process matches in string-like columns
-                 if (
-                     strpos($type, 'char') !== false || 
-                     strpos($type, 'text') !== false || 
-                     strpos($type, 'blob') !== false
-                 ) {
-                     // 1. Find candidates (Optimization)
-                     // Use simple LIKE query to find rows that *might* contain the file
-                     // This reduces the number of PHP regex operations significantly
-                     $candidateSql = rex_sql::factory();
-                     $query = 'SELECT '.$candidateSql->escapeIdentifier($pkName).', '.$candidateSql->escapeIdentifier($colName).' 
-                               FROM '.$candidateSql->escapeIdentifier($table).' 
-                               WHERE '.$candidateSql->escapeIdentifier($colName).' LIKE ?';
-                     
-                     $rows = $candidateSql->getArray($query, ['%'.$old.'%']);
-                     
-                     foreach ($rows as $row) {
-                         $currentVal = $row[$colName];
-                         
-                         // 2. Precise Regex Replacement
-                         // Avoid partial matches (e.g. replacing 'foo.jpg' inside 'my_foo.jpg')
-                         // Allowed chars in filenames: alphanumeric, ., _, -
-                         // Look for $old surrounded by non-filename-chars (or start/end of string)
-                         
-                         $regex = '/(?<![a-zA-Z0-9._+-])' . preg_quote($old, '/') . '(?![a-zA-Z0-9._+-])/';
-                         
-                         $newVal = preg_replace($regex, $new, $currentVal);
-                         
-                         if ($newVal !== null && $newVal !== $currentVal) {
-                             // 3. Update Row
-                             $upd = rex_sql::factory();
-                             $upd->setTable($table);
-                             $upd->setWhere([$pkName => $row[$pkName]]);
-                             $upd->setValue($colName, $newVal);
-                             
-                             try {
-                                 $upd->update();
-                                 // Add metadata for history if needed (e.g., updated_at). 
-                                 // Or just trust REDAXO's internal handling (if via Dataset).
-                                 // Since we use raw SQL via rex_sql, timestamps aren't auto-updated unless trigger exists.
-                                 // This is acceptable for a maintenance tool.
-                                 $count++;
-                             } catch (\Exception $e) {
-                                 // Ignore update errors (e.g. constraints)
-                                 // But maybe log them?
-                             }
-                         }
-                     }
-                 }
-             }
+        // Determine Primary Key for updates
+        $pkResult = $sql->getArray("SHOW KEYS FROM ".$sql->escapeIdentifier($table)." WHERE Key_name = 'PRIMARY'");
+        $pkName = '';
+        if (count($pkResult) > 0) {
+            $pkName = $pkResult[0]['Column_name'];
+        } else {
+            return 0; // Skip tables without PK
         }
 
+        // Get String Columns
+        $columns = rex_sql::factory()->showColumns($table);
+        
+        foreach ($columns as $column) {
+            $colName = $column['name'];
+            $type = strtolower($column['type']);
+            
+            if (
+                strpos($type, 'char') !== false || 
+                strpos($type, 'text') !== false || 
+                strpos($type, 'blob') !== false
+            ) {
+                foreach ($replaceFilenames as $old) {
+                    if ($old === $keep) continue;
+
+                    // 1. Find candidates
+                    $candidateSql = rex_sql::factory();
+                    $query = 'SELECT '.$candidateSql->escapeIdentifier($pkName).', '.$candidateSql->escapeIdentifier($colName).' 
+                              FROM '.$candidateSql->escapeIdentifier($table).' 
+                              WHERE '.$candidateSql->escapeIdentifier($colName).' LIKE ?';
+                    
+                    try {
+                        $rows = $candidateSql->getArray($query, ['%'.$old.'%']);
+                    } catch (\Exception $e) {
+                        continue;
+                    }
+
+                    foreach ($rows as $row) {
+                        $currentVal = $row[$colName];
+                        
+                        $regex = '/(?<![a-zA-Z0-9._+-])' . preg_quote($old, '/') . '(?![a-zA-Z0-9._+-])/';
+                        $newVal = preg_replace($regex, $keep, $currentVal);
+                        
+                        if ($newVal !== null && $newVal !== $currentVal) {
+                            $upd = rex_sql::factory();
+                            $upd->setTable($table);
+                            $upd->setWhere([$pkName => $row[$pkName]]);
+                            $upd->setValue($colName, $newVal);
+                            
+                            try {
+                                $upd->update();
+                                $count++;
+                            } catch (\Exception $e) {
+                                // Ignore update errors
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return $count;
     }
 }

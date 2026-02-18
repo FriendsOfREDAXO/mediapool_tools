@@ -27,11 +27,75 @@ class ApiDuplicates extends rex_api_function
             case 'merge_files':
                 $this->mergeFiles();
                 break;
+            case 'get_merge_tables':
+                $this->getMergeTables();
+                break;
+            case 'process_table_merge':
+                $this->processTableMerge();
+                break;
+            case 'finish_merge':
+                $this->finishMerge();
+                break;
             default:
                 throw new \rex_api_exception('Unknown action');
         }
 
         return new rex_api_result(true);
+    }
+
+    private function getMergeTables()
+    {
+        $tables = DuplicateAnalysis::getTablesForSearch();
+        rex_response::sendJson(['success' => true, 'tables' => $tables]);
+        exit;
+    }
+
+    private function processTableMerge()
+    {
+        if (!rex::getUser()->isAdmin() && !rex::getUser()->hasPerm('mediapool_tools[duplicates]')) {
+            $this->sendError('Permission denied');
+        }
+
+        $table = rex_request('table', 'string');
+        $keep = rex_request('keep', 'string');
+        $replace = rex_request('replace', 'array');
+        
+        if (!$table || !$keep || empty($replace)) {
+            $this->sendError('Missing input');
+        }
+
+        // Security check: ensure table is one of the allowed ones to prevent arbitrary SQL exec if logic was different?
+        // But getTablesForSearch() returns all tables, so...
+        // Strictly speaking, we should validate against known tables.
+        if (!in_array($table, DuplicateAnalysis::getTablesForSearch())) {
+            $this->sendError('Invalid table');
+        }
+
+        $count = DuplicateAnalysis::processTable($table, $keep, $replace);
+
+        rex_response::sendJson(['success' => true, 'replaced_refs' => $count]);
+        exit;
+    }
+
+    private function finishMerge()
+    {
+        if (!rex::getUser()->isAdmin() && !rex::getUser()->hasPerm('mediapool_tools[duplicates]')) {
+            $this->sendError('Permission denied');
+        }
+
+        $keep = rex_request('keep', 'string');
+        $replace = rex_request('replace', 'array');
+        
+        if (!$keep || empty($replace)) {
+            $this->sendError('Missing input');
+        }
+
+        $result = DuplicateAnalysis::deleteFiles($keep, $replace);
+        
+        $msg = \rex_addon::get('mediapool_tools')->i18n('duplicates_merge_success', $result['deleted_files'], 0); // Replaced refs count is unknown here, accumulated in JS
+        
+        rex_response::sendJson(['success' => true, 'data' => $result, 'message' => $msg]);
+        exit;
     }
 
     private function mergeFiles()
@@ -98,6 +162,7 @@ class ApiDuplicates extends rex_api_function
                 $redundantFiles += ($count - 1);
             }
 
+            $html .= '<div class="alert alert-warning mediapool-tools-duplicates-hint">'.\rex_addon::get('mediapool_tools')->i18n('duplicates_usage_hint').'</div>';
             $html .= '<div class="alert alert-warning" style="margin-bottom: 20px;">';
             $html .= '<strong>'.\rex_addon::get('mediapool_tools')->i18n('duplicates_summary_title').'</strong><br>';
             $html .= \rex_addon::get('mediapool_tools')->i18n('duplicates_summary_text', $totalGroups, $totalFiles, $redundantFiles);

@@ -74,6 +74,7 @@ mediapool_tools_duplicates_btn_merge = Keep selection & replace/delete duplicate
 mediapool_tools_duplicates_merge_success = Success! {0} files deleted. {1} references replaced in database.
 mediapool_tools_duplicates_summary_title = Analysis Result
 mediapool_tools_duplicates_summary_text = Found <b>{0}</b> groups with a total of <b>{1}</b> files. Potentially redundant: <b>{2}</b> files.
+mediapool_tools_duplicates_usage_hint = Note: Files might also be referenced outside of REDAXO content (e.g. CSS, JS, templates). Verify usage before deleting duplicates.
 
 filesize = File size
 createdate = Created on

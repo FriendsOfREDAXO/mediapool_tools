@@ -61,6 +61,7 @@ mediapool_tools_duplicates_btn_merge = Zusammenführen (Merge)
 mediapool_tools_duplicates_merge_success = Erfolg! {0} Dateien gelöscht. {1} Referenzen in der Datenbank ersetzt.
 mediapool_tools_duplicates_summary_title = Analyse Ergebnis
 mediapool_tools_duplicates_summary_text = Es wurden <b>{0}</b> Gruppen mit insgesamt <b>{1}</b> Dateien gefunden. Potenziell redundant sind <b>{2}</b> Dateien.
+mediapool_tools_duplicates_usage_hint = Hinweis: Dateien können auch außerhalb von REDAXO-Inhalten (z.B. in CSS, JS oder Templates) verwendet werden. Vor dem Löschen die Nutzung prüfen.
 mediapool_tools_config_max_height_notice = Standardzielgröße für die Skalierung.
 mediapool_tools_config_search_label = Große Dateien Analyse
 mediapool_tools_config_min_size = Warn-Grenzwert Dateigröße (MB)

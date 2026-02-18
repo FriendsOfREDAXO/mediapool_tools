@@ -71,7 +71,7 @@ $(document).on('rex:ready', function () {
     }
 
     function initMergeButtons() {
-        $('.duplicate-group-form').on('submit', function(e) {
+        $('.duplicate-group-form').off('submit').on('submit', function(e) {
              e.preventDefault();
              var $form = $(this);
              var keep = $form.find('input[name="keep"]:checked').val();
@@ -91,18 +91,92 @@ $(document).on('rex:ready', function () {
              var originalText = $btn.text();
              $btn.prop('disabled', true).text('Merge...');
              
+             // Step 1: Get Tables
              $.ajax({
                  url: 'index.php?rex-api-call=mediapool_tools_duplicates',
                  method: 'POST',
-                 data: { action: 'merge_files', keep: keep, replace: replace },
+                 data: { action: 'get_merge_tables' },
                  success: function (res) {
                      if (res.success) {
-                         // Show success message
-                         var $successAlert = $('<div class="alert alert-success">' + res.message + '</div>');
-                         $form.closest('.panel').replaceWith($successAlert);
+                         var tables = res.tables;
+                         var totalTables = tables.length;
+                         var processedTables = 0;
+                         var totalReplaced = 0;
                          
-                         // Optional: Fade out alert after some time?
-                         // setTimeout(function() { $successAlert.fadeOut(); }, 5000);
+                         showProgressModal();
+                         updateProgress(0);
+                         $('#dup-status-text').text('Processing...');
+
+                         function processNextTable() {
+                             if (processedTables >= totalTables) {
+                                 finishMerge();
+                                 return;
+                             }
+                             
+                             var table = tables[processedTables];
+                             $('#dup-status-text').text('Processing table: ' + table + ' (' + (processedTables+1) + '/' + totalTables + ')');
+                             
+                             $.ajax({
+                                 url: 'index.php?rex-api-call=mediapool_tools_duplicates',
+                                 method: 'POST',
+                                 data: { 
+                                     action: 'process_table_merge', 
+                                     table: table,
+                                     keep: keep, 
+                                     replace: replace 
+                                 },
+                                 success: function(res) {
+                                     if (res.success) {
+                                         totalReplaced += (res.replaced_refs || 0);
+                                         processedTables++;
+                                         var percent = Math.round((processedTables / totalTables) * 100);
+                                         updateProgress(percent);
+                                         processNextTable(); // Recursive call
+                                     } else {
+                                         handleError('Error processing table ' + table + ': ' + res.message);
+                                         $btn.prop('disabled', false).text(originalText);
+                                     }
+                                 },
+                                 error: function() { 
+                                     handleError('Network Error processing table ' + table);
+                                     $btn.prop('disabled', false).text(originalText);
+                                 }
+                             });
+                         }
+                         
+                         function finishMerge() {
+                             $('#dup-status-text').text('Deleting duplicate files...');
+                             $.ajax({
+                                 url: 'index.php?rex-api-call=mediapool_tools_duplicates',
+                                 method: 'POST',
+                                 data: { 
+                                     action: 'finish_merge', 
+                                     keep: keep, 
+                                     replace: replace 
+                                 },
+                                 success: function(res) {
+                                     hideProgressModal();
+                                     if (res.success) {
+                                         // Update message with total replaced count
+                                         // The message from server only knows about deleted files, not replaced refs from previous steps
+                                         var msg = res.message + " (" + totalReplaced + " references replaced)";
+                                         
+                                         var $successAlert = $('<div class="alert alert-success">' + msg + '</div>');
+                                         $form.closest('.panel').replaceWith($successAlert);
+                                     } else {
+                                         alert('Error: ' + res.message);
+                                         $btn.prop('disabled', false).text(originalText);
+                                     }
+                                 },
+                                 error: function() { 
+                                     handleError('Network Error finishing merge');
+                                     $btn.prop('disabled', false).text(originalText);
+                                 }
+                             });
+                         }
+
+                         processNextTable();
+
                      } else {
                          alert('Error: ' + res.message);
                          $btn.prop('disabled', false).text(originalText);
