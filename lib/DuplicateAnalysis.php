@@ -140,6 +140,20 @@ class DuplicateAnalysis
             rex::getTable('logging'),
         ];
         
+        $ignoredPrefixes = [
+            'rex_tmp_',
+            'rex_pagestats_',
+            // 'rex_metainfo_', // Metainfo often contains media references (e.g. art_file), so we should probably scan them?
+            // User requested excluding them, but that risks breaking references or false positives in unused media.
+            // However, this is for duplicate replacement. If we don't scan metainfo, we don't replace references there.
+            // But usually metainfo columns are strictly named (e.g. 'art_file'). 
+            // Let's follow user request but be careful about exact matches vs prefixes.
+            'rex_mediamanager_',
+            'rex_consent_manager',
+            'rex_analysis_',
+            'rex_backup_',
+        ]; 
+        
         // Add user defined excluded tables
         $userExcluded = \rex_config::get('mediapool_tools', 'excluded_tables', []);
         
@@ -172,6 +186,12 @@ class DuplicateAnalysis
 
         foreach ($tables as $table) {
              if (in_array($table, $ignoredTables)) continue;
+             
+             // Check prefixes
+             foreach ($ignoredPrefixes as $prefix) {
+                 if (strpos($table, $prefix) === 0) continue 2;
+             }
+             
              $candidates[] = $table;
         }
         return $candidates;

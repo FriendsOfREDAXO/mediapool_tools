@@ -72,6 +72,11 @@ class UnusedMediaAnalysis
             
             if (in_array($table, $userExcludedTables)) continue;
 
+             // Check prefixes
+             foreach ($ignoredPrefixes as $prefix) {
+                 if (strpos($table, $prefix) === 0) continue 2;
+             }
+
             $tablesToScan[] = $table;
         }
 
