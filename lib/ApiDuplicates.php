@@ -189,7 +189,12 @@ class ApiDuplicates extends rex_api_function
                     
                     // Preview
                     if ($media && $media->isImage()) {
-                        $html .= '<img src="index.php?rex_media_type=rex_mediapool_preview&rex_media_file='.urlencode($file).'" style="height:30px; margin-right:10px;">';
+                        $fileExt = strtolower(\rex_file::extension($file));
+                        $previewUrl = 'index.php?rex_media_type=rex_mediapool_preview&rex_media_file='.urlencode($file);
+                        if ($fileExt === 'svg') {
+                            $previewUrl = \rex_url::media($file);
+                        }
+                        $html .= '<img src="'.$previewUrl.'" style="height:30px; margin-right:10px;">';
                     }
                     $html .= '<span><b><a href="index.php?page=mediapool/media&file_name='.urlencode($file).'" target="_blank">'.htmlspecialchars($file).'</a></b> - '.htmlspecialchars($title).'</span>';
                     $html .= '</label>';
