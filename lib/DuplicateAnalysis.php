@@ -133,12 +133,39 @@ class DuplicateAnalysis
     public static function getTablesForSearch(): array
     {
         $sql = rex_sql::factory();
-        // Tables to exclude from scanning
+        // Tables to exclude from scanning (hardcoded + user config)
         $ignoredTables = [
-            rex::getTable('media'),         // Do not replace in the media pool table itself (we delete the old entry later)
-            rex::getTable('media_category'),// Usually doesn't contain filenames
+            rex::getTable('media'),
+            rex::getTable('media_category'),
             rex::getTable('logging'),
         ];
+        
+        // Add user defined excluded tables
+        $userExcluded = \rex_config::get('mediapool_tools', 'excluded_tables', []);
+        
+        // Ensure it's an array (rex_config might return different types depending on save method, usually array if saved via select multiple)
+        if (!is_array($userExcluded)) {
+            // Fallback for old string format or empty
+            if (is_string($userExcluded) && $userExcluded !== '') {
+                 // Try pipe separated (rex_config default list save)
+                 if (strpos($userExcluded, '|') !== false) {
+                     $userExcluded = explode('|', trim($userExcluded, '|'));
+                 }
+                 // Try newline separated (old text area)
+                 else {
+                     $userExcluded = explode("\n", str_replace(["\r", ","], "\n", $userExcluded));
+                 }
+            } else {
+                $userExcluded = [];
+            }
+        }
+
+        foreach ($userExcluded as $ut) {
+             $ut = trim($ut);
+             if ($ut != '') {
+                 $ignoredTables[] = $ut;
+             }
+        }
         
         $tables = rex_sql::factory()->getTablesAndViews();
         $candidates = [];

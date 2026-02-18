@@ -71,6 +71,9 @@ mediapool_tools_config_min_width = Min. Breite für Suche (px)
 mediapool_tools_config_min_width_notice = Optional: Markiere/Suche Bilder die breiter sind als dieser Wert (0 = deaktiviert).
 mediapool_tools_config_min_height = Min. Höhe für Suche (px)
 mediapool_tools_config_min_height_notice = Optional: Markiere/Suche Bilder die höher sind als dieser Wert (0 = deaktiviert).
+mediapool_tools_config_excluded_tables_label = Ausgenommene Tabellen für die Suche
+mediapool_tools_config_excluded_tables = Negativliste (Tabellen auswählen)
+mediapool_tools_config_excluded_tables_notice = Diese Tabellen werden bei der Suche nach unbenutzten Medien und Duplikaten ignoriert. Tipp: Halten Sie STRG/CMD gedrückt für Mehrfachauswahl.
 
 mediapool_tools_tools_title = Tools
 

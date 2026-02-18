@@ -32,6 +32,24 @@ $field = $form->addTextField('search-min-height');
 $field->setLabel($addon->i18n('config_min_height'));
 $field->setNotice($addon->i18n('config_min_height_notice'));
 
+$form->addFieldset($addon->i18n('config_excluded_tables_label'));
+
+$field = $form->addSelectField('excluded_tables');
+$field->setLabel($addon->i18n('config_excluded_tables'));
+$field->setNotice($addon->i18n('config_excluded_tables_notice'));
+
+$select = $field->getSelect();
+$select->setMultiple();
+$select->setSize(10);
+$select->setAttribute('class', 'form-control selectpicker'); // Use Bootstrap/REDAXO select styling
+$select->setAttribute('data-live-search', 'true');
+
+$tables = rex_sql::factory()->getTablesAndViews();
+foreach ($tables as $table) {
+    if (strpos($table, 'tmp_') === 0) continue; // Hide tmp tables
+    $select->addOption($table, $table);
+}
+
 $content .= $form->get();
 
 $fragment = new rex_fragment();

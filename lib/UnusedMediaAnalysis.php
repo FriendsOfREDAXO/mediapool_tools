@@ -32,6 +32,34 @@ class UnusedMediaAnalysis
         $tablesToScan = [];
         
         // Wir scannen alle Tabellen, außer rex_media eigene Tabellen
+        
+        // Add user defined excluded tables
+        $userExcluded = \rex_config::get('mediapool_tools', 'excluded_tables', []);
+        $userExcludedTables = [];
+
+        // Ensure it's an array
+        if (!is_array($userExcluded)) {
+            if (is_string($userExcluded) && $userExcluded !== '') {
+                 // Try pipe separated (rex_config default list save)
+                 if (strpos($userExcluded, '|') !== false) {
+                     $userExcluded = explode('|', trim($userExcluded, '|'));
+                 }
+                 // Try newline separated (old text area)
+                 else {
+                     $userExcluded = explode("\n", str_replace(["\r", ","], "\n", $userExcluded));
+                 }
+            } else {
+                $userExcluded = [];
+            }
+        }
+
+        foreach ($userExcluded as $ut) {
+             $ut = trim($ut);
+             if ($ut != '') {
+                 $userExcludedTables[] = $ut;
+             }
+        }
+
         foreach ($tables as $table) {
             // Ignoriere Tabellen, die sicher keine Medien enthalten (z.B. rex_user_passkey, Cache tables etc)
             // Auch rex_media und rex_media_category ignorieren, da hier die Dateien definiert sind, nicht genutzt.
@@ -42,6 +70,8 @@ class UnusedMediaAnalysis
             if ($table == rex::getTable('media_category')) continue;
             if ($table == rex::getTable('mediapool_tools_protected')) continue; 
             
+            if (in_array($table, $userExcludedTables)) continue;
+
             $tablesToScan[] = $table;
         }
 

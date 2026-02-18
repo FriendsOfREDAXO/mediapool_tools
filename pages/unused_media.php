@@ -97,7 +97,11 @@ if ($hasResult) {
             $linkEnd = '</a>';
 
             if ($isImage) {
-                 $preview = '<img src="index.php?rex_media_type=rex_mediapool_preview&rex_media_file='.rex_escape($filename).'" style="max-height: 40px; max-width: 40px;" />';
+                 $previewUrl = 'index.php?rex_media_type=rex_mediapool_preview&rex_media_file='.rex_escape($filename);
+                 if ($fileExt === 'svg') {
+                     $previewUrl = rex_url::media($filename);
+                 }
+                 $preview = '<img src="'.$previewUrl.'" style="max-height: 40px; max-width: 40px; object-fit: contain;" />';
                  $linkStart = '<a href="'.$mediaPath.'" class="unused-media-preview" data-type="image" data-title="'.rex_escape($media->getTitle()).'">';
             } elseif ($isVideo) {
                  $preview = '<i class="rex-icon fa-file-video-o fa-2x text-muted"></i>';

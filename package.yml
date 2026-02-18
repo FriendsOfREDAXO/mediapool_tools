@@ -15,3 +15,4 @@ config:
     search-min-size-mb: 0
     search-min-width: 0
     search-min-height: 0
+    excluded_tables: []
