@@ -92,16 +92,14 @@ class ApiUnusedMedia extends rex_api_function
             
             // Usage Check (skip if force is true)
             if ($media && !$force) {
-                $warning = [];
-                $inUse = \rex_extension::registerPoint(new \rex_extension_point(
+                $warning = \rex_extension::registerPoint(new \rex_extension_point(
                     'MEDIA_IS_IN_USE',
-                    false,
-                    ['filename' => $file, 'medium' => $media, 'warning' => &$warning]
+                    [],
+                    ['filename' => $file, 'medium' => $media]
                 ));
-    
-                if ($inUse) {
-                    /** @phpstan-ignore-next-line */
-                    $reason = !empty($warning) ? implode(", ", $warning) : "In Verwendung (Grund unbekannt)";
+
+                if (is_array($warning) && [] !== $warning) {
+                    $reason = implode(', ', $warning);
                     $errors[] = "<b>$file</b> kann nicht gelöscht werden:<br> - $reason";
                     continue;
                 }
