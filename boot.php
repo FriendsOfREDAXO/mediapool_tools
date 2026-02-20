@@ -85,11 +85,12 @@ rex_extension::register('MEDIA_IS_IN_USE', function(rex_extension_point $ep) {
     try {
         $sql->setQuery('SELECT filename FROM ' . rex::getTable('mediapool_tools_protected') . ' WHERE filename = ? LIMIT 1', [$filename]);
         if ($sql->getRows() > 0) {
-            $ep->setSubject(true);
-            $warning = $ep->getParam('warning');
-            if (!is_array($warning)) $warning = [];
+            $warning = $ep->getSubject();
+            if (!is_array($warning)) {
+                $warning = [];
+            }
             $warning[] = rex_i18n::rawMsg('mediapool_tools_media_protected_warning', $filename);
-            $ep->setParam('warning', $warning);
+            $ep->setSubject($warning);
         }
     } catch (rex_sql_exception $e) {
         // Tabelle existiert noch nicht -> keine Protection
