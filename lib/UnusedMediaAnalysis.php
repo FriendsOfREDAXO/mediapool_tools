@@ -59,6 +59,14 @@ class UnusedMediaAnalysis
                  $userExcludedTables[] = $ut;
              }
         }
+        $ignoredPrefixes = [
+            'rex_tmp_',
+            'rex_pagestats_',
+            'rex_mediamanager_',
+            'rex_consent_manager',
+            'rex_analysis_',
+            'rex_backup_',
+        ];
 
         foreach ($tables as $table) {
             // Ignoriere Tabellen, die sicher keine Medien enthalten (z.B. rex_user_passkey, Cache tables etc)
