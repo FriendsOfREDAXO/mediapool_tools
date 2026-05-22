@@ -124,7 +124,8 @@ class UnusedMediaAnalysis
         
         while (microtime(true) - $startTime < $maxTime) {
             if ($batch['currentTableIndex'] >= count($batch['tables'])) {
-                // Fertig!
+                // Fertig! Akkumulierten Stand vor Finalisierung speichern.
+                self::saveBatchStatus($batchId, $batch);
                 return self::finalizeAnalysis($batchId);
             }
 
