@@ -175,22 +175,20 @@ class ApiUnusedMedia extends rex_api_function
         }
         
         $count = 0;
-        $sql = rex_sql::factory();
-        $sql->setTable(rex::getTable('media'));
-        
+
         foreach ($files as $file) {
-            // rex_media_service hat keine move Methode, wir machen es direkt SQL
-            // EPs beachten? Ja, MEDIA_UPDATED wäre gut.
-            // Aber Bulk-Update ist schneller via SQL und dann Cache clearen.
-            
+            $sql = rex_sql::factory();
+            $sql->setTable(rex::getTable('media'));
             $sql->setWhere(['filename' => $file]);
             $sql->setValue('category_id', $categoryId);
             $sql->setValue('updatedate', date('Y-m-d H:i:s'));
             $sql->setValue('updateuser', rex::getUser()->getLogin());
-            
+
             try {
                 $sql->update();
-                $count++;
+                if ($sql->getRows() > 0) {
+                    $count++;
+                }
                 \rex_media_cache::delete($file);
             } catch (\Exception $e) {
                 // Ignore errors

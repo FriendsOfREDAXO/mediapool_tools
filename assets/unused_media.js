@@ -139,18 +139,6 @@ $(document).on('rex:ready', function (event, element) {
     
     // Verschieben
     $('#btn-move-selected').on('click', function() {
-        let files = getSelectedFiles();
-        // Prompt oder besseres UI für Kategorie Auswahl? 
-        // Wir nehmen hier das Element aus dem Footer
-        /* Da Prompt doof ist, haben wir unten im Footer ein Select gebaut, wir lesen das aus. */
-        /* Moment, im HTML unten müssen wir das Select bauen. */
-    });
-    
-    // Da ich das Dropdown für Move im HTML noch nicht kenne, baue ich es hier generisch ein:
-    // Der Button im HTML muss ein data-target haben oder wir nutzen ein Modal für die Zielkategorie.
-    // Einfacher: Ein Select neben dem Verschieben Button anzeigen?
-    
-    $('#btn-move-selected').on('click', function() {
          let targetCatId = $('select[name="target_category_id"]').val();
          let files = getSelectedFiles();
          
