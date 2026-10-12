@@ -131,3 +131,7 @@ mediapool_tools_broken_media_error = Es ist ein Fehler aufgetreten.
 mediapool_tools_broken_media_orphans_title = {0} Dateien im Medienordner ohne Eintrag im Medienpool
 mediapool_tools_broken_media_orphans_hint = Nur zur Information: Manche Dateien liegen absichtlich direkt im Medienordner (z. B. von Vorlagen oder anderen AddOns). Vor dem Löschen per FTP prüfen, ob sie gebraucht werden.
 mediapool_tools_broken_media_more_rows = … und {0} weitere. Zuerst die gezeigten beheben und die Prüfung neu starten.
+mediapool_tools_broken_media_btn_fix_all = Alle {0} veralteten Angaben korrigieren
+mediapool_tools_broken_media_confirm_fix_all = Größe, Typ und Abmessungen von {0} Dateien aus den Dateien übernehmen?
+mediapool_tools_broken_media_fixing_all = Angaben werden korrigiert...
+mediapool_tools_broken_media_fixed_all = {0} Einträge korrigiert.

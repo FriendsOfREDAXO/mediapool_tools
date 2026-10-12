@@ -44,7 +44,19 @@ class BrokenMediaList
                 $badges[] = '<span class="label label-' . self::level($type) . '">' . $count . ' × ' . $addon->i18n('broken_media_type_' . $type) . '</span>';
             }
         }
-        $html .= implode(' ', $badges) . '</div>';
+        $html .= implode(' ', $badges);
+        // Veraltete Angaben sind ungefährlich zu korrigieren – alle auf einmal (auch die über MAX_ROWS hinaus)
+        $metaFiles = [];
+        foreach ($problems as $item) {
+            if (in_array('metadata', array_column($item['problems'], 'type'), true)) {
+                $metaFiles[] = (string) $item['filename'];
+            }
+        }
+        if ([] !== $metaFiles) {
+            $html .= '<div style="margin-top:10px"><button type="button" class="btn btn-primary btn-sm" data-broken-fix-all="' . rex_escape(json_encode($metaFiles)) . '">'
+                . $addon->i18n('broken_media_btn_fix_all', (string) count($metaFiles)) . '</button></div>';
+        }
+        $html .= '</div>';
         $html .= '<p class="help-block">' . $addon->i18n('broken_media_actions_hint') . '</p>';
 
         // Schwerste Befunde zuerst (Reihenfolge wie TYPES), dann nach Dateiname

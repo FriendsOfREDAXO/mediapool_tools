@@ -2,6 +2,11 @@
 
 Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.3.0] - 2026-10-12
+
+### Hinzugefügt
+- **Defekte Dateien:** Knopf „Alle N veralteten Angaben korrigieren“ – übernimmt Größe, Typ und Abmessungen aller betroffenen Dateien in einem Rutsch (in Paketen zu 25, mit Fortschritt), auch für Befunde jenseits der 300 angezeigten Zeilen.
+
 ## [1.2.0] - 2026-10-12
 
 ### Hinzugefügt

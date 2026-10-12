@@ -45,6 +45,40 @@ $(document).on('rex:ready', function () {
         }, fail);
     }
 
+    // Alle veralteten Angaben korrigieren – in Paketen zu 25 Dateien
+    $result.on('click', '[data-broken-fix-all]', function () {
+        var $btn = $(this);
+        var files = $btn.data('broken-fix-all') || [];
+        if (!files.length || !confirm(i18n.confirm_fix_all.replace('{0}', files.length))) return;
+        $btn.prop('disabled', true);
+        showProgress(i18n.fixing_all);
+        var done = 0, fixed = 0;
+        function next() {
+            if (done >= files.length) {
+                hideProgress();
+                $btn.replaceWith('<span class="text-success"><i class="rex-icon fa-check"></i> ' + $('<span>').text(i18n.fixed_all.replace('{0}', fixed)).html() + '</span>');
+                $result.find('[data-broken-action="fix_meta"]').each(function () {
+                    var $row = $(this).closest('tr');
+                    $(this).replaceWith('<span class="text-success"><i class="rex-icon fa-check"></i></span>');
+                    $row.attr('data-done', '1');
+                });
+                return;
+            }
+            var chunk = files.slice(done, done + 25);
+            call({ action: 'fix_meta_batch', files: chunk }).then(function (res) {
+                done += chunk.length;
+                fixed += res.fixed || 0;
+                setProgress(Math.round(done / files.length * 100));
+                next();
+            }, function (message) {
+                hideProgress();
+                $btn.prop('disabled', false);
+                alert(message || i18n.error);
+            });
+        }
+        next();
+    });
+
     // Aktionen je Zeile
     $result.on('click', '[data-broken-action]', function () {
         var $btn = $(this);

@@ -1,5 +1,5 @@
 package: mediapool_tools
-version: '1.2.0'
+version: '1.3.0'
 author: Thomas, Tizian & Claude
 supportpage: https://github.com/FriendsOfREDAXO/mediapool_tools
 description: 'Tools für den Mediapool: Bulk-Resize, Unused Media Finder, Duplikate, defekte Dateien und mehr'

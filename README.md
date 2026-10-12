@@ -56,7 +56,7 @@ Findet Dateien im Medienpool, die kaputt oder falsch benannt sind – solche Dat
 
 **Aktionen je Datei:**
 *   **Endung korrigieren**: Datei wird unter dem richtigen Namen angelegt, **alle Verweise in der Datenbank** werden Tabelle für Tabelle umgestellt (wie beim Duplicate Finder), danach Eintrag umbenannt und alte Datei entfernt.
-*   **Angaben korrigieren**: Größe, Typ und Abmessungen aus der Datei übernehmen.
+*   **Angaben korrigieren**: Größe, Typ und Abmessungen aus der Datei übernehmen. Mit **„Alle … korrigieren“** für alle Befunde auf einmal.
 *   **Löschen**: nur, wenn die Datei nirgends verwendet wird (Prüfung des Medienpools).
 
 Die Prüfung läuft in Etappen und hält auch große Medienpools aus; die Liste zeigt die schwersten Befunde zuerst (höchstens 300 Zeilen). Recht: `mediapool_tools[broken_media]`.
