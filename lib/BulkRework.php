@@ -29,6 +29,11 @@ class BulkRework
         'psd'
     ];
     
+    // Formate, die libvips (vipsthumbnail) hier lesen und schreiben soll – alles andere übernimmt ImageMagick bzw. GD
+    const VIPS_FORMATS = [
+        'jpg', 'jpeg', 'png', 'webp'
+    ];
+
     // Übersprungene Formate bei Bulk-Verarbeitung
     const SKIPPED_FORMATS = [
         'tif', 'tiff', 'svg', 'heic'
@@ -120,6 +125,37 @@ class BulkRework
         return $path;
     }
     
+    /** @var string|null Pfad zu vipsthumbnail (Cache je Anfrage) */
+    private static ?string $vipsPath = null;
+
+    /**
+     * Prüft ob libvips (Programm vipsthumbnail) verfügbar ist
+     */
+    public static function hasVips(): bool
+    {
+        return '' !== self::getVipsPath();
+    }
+
+    /**
+     * Ermittelt den Pfad zu vipsthumbnail (libvips-tools)
+     */
+    private static function getVipsPath(): string
+    {
+        if (null !== self::$vipsPath) {
+            return self::$vipsPath;
+        }
+        self::$vipsPath = '';
+        if (function_exists('exec')) {
+            $out = [];
+            exec('command -v vipsthumbnail || which vipsthumbnail', $out, $ret);
+            if (0 === $ret && !empty($out[0])) {
+                self::$vipsPath = (string) $out[0];
+            }
+        }
+
+        return self::$vipsPath;
+    }
+
     /**
      * Prüft ob GD verfügbar ist
      *
@@ -375,25 +411,25 @@ class BulkRework
                 ];
             }
             
-            if ($canProcess['needsImageMagick'] && self::hasImageMagick()) {
-                // Hier müsste die ImageMagick Logik aus Uploader übernommen werden
-                // Da diese tief integriert ist, kopieren wir sie am besten
-                // Falls sie fehlt, müssen wir sie kopieren.
-                // Ich übernehme hier die Logik aus der Originaldatei und adaptiere sie
-                $result = self::reworkFileWithImageMagick($filename, $maxWidth, $maxHeight);
-                if ($result) {
-                    return ['success' => true, 'skipped' => false, 'method' => 'ImageMagick', 'filename' => $filename];
-                }
+            // Reihenfolge: libvips (schnell, wenig Speicher, dreht nach EXIF) → ImageMagick (Extension, sonst convert) → GD als letzte Lösung.
+            // Scheitert ein Weg, wird der nächste versucht.
+            $extension = strtolower(rex_file::extension($filename));
+            if (!self::needsResize($filename, $maxWidth, $maxHeight)) {
+                return ['success' => false, 'skipped' => true, 'reason' => 'Bild ist bereits klein genug', 'filename' => $filename];
             }
-            
-            if (self::hasGD()) {
-                // Gleiches für GD
-               $result = self::reworkFile($filename, $maxWidth, $maxHeight);
-                if ($result) {
-                    return ['success' => true, 'skipped' => false, 'method' => 'GD/MediaManager', 'filename' => $filename];
-                }
+
+            if (self::hasVips() && in_array($extension, self::VIPS_FORMATS, true) && self::reworkFileWithVips($filename, $maxWidth, $maxHeight)) {
+                return ['success' => true, 'skipped' => false, 'method' => 'libvips', 'filename' => $filename];
             }
-            
+
+            if (self::hasImageMagick() && self::reworkFileWithImageMagick($filename, $maxWidth, $maxHeight)) {
+                return ['success' => true, 'skipped' => false, 'method' => 'ImageMagick', 'filename' => $filename];
+            }
+
+            if (self::hasGD() && in_array($extension, self::SUPPORTED_FORMATS, true) && self::reworkFile($filename, $maxWidth, $maxHeight)) {
+                return ['success' => true, 'skipped' => false, 'method' => 'GD', 'filename' => $filename];
+            }
+
             return [
                 'success' => false,
                 'skipped' => false,
@@ -415,6 +451,65 @@ class BulkRework
     // Adaptierte private Methoden für ImageMagick & GD müssen noch ergänzt werden
     // Ich importiere hier die gekürzte Version von oben und ergänze die fehlenden Methoden die im uploader addon waren
     
+    /**
+     * Muss das Bild verkleinert werden? Berücksichtigt die Standardwerte aus der Konfiguration und die EXIF-Orientation
+     * (bei 5–8 sind sichtbare Breite und Höhe vertauscht).
+     */
+    public static function needsResize(string $filename, ?int &$maxWidth = null, ?int &$maxHeight = null): bool
+    {
+        if ((is_null($maxWidth) || 0 === $maxWidth) && (is_null($maxHeight) || 0 === $maxHeight)) {
+            $maxWidth = (int) rex_addon::get('mediapool_tools')->getConfig('image-max-width', 0);
+            $maxHeight = (int) rex_addon::get('mediapool_tools')->getConfig('image-max-height', 0);
+        }
+        $maxWidth = (int) $maxWidth;
+        $maxHeight = (int) $maxHeight;
+        $path = rex_path::media($filename);
+        $size = is_file($path) ? @getimagesize($path) : false;
+        if (!is_array($size) || 0 == $size[0] || 0 == $size[1] || (0 === $maxWidth && 0 === $maxHeight)) {
+            return false;
+        }
+        [$width, $height] = self::exifOrientation($path, $filename) >= 5 ? [$size[1], $size[0]] : [$size[0], $size[1]];
+
+        return ($maxWidth > 0 && $width > $maxWidth) || ($maxHeight > 0 && $height > $maxHeight);
+    }
+
+    /**
+     * Verkleinern mit libvips (vipsthumbnail): dreht nach EXIF, verkleinert nur („>“), entfernt Metadaten.
+     * Schreibt in eine temporäre Datei im Medienordner und ersetzt das Original erst bei Erfolg.
+     */
+    public static function reworkFileWithVips(string $filename, ?int $maxWidth = null, ?int $maxHeight = null): bool
+    {
+        $vips = self::getVipsPath();
+        $extension = strtolower(rex_file::extension($filename));
+        if ('' === $vips || !in_array($extension, self::VIPS_FORMATS, true) || !self::needsResize($filename, $maxWidth, $maxHeight)) {
+            return false;
+        }
+        $path = rex_path::media($filename);
+        $size = ($maxWidth > 0 ? $maxWidth : '') . 'x' . ($maxHeight > 0 ? $maxHeight : '') . '>';
+        $options = 'png' === $extension ? '[strip]' : '[Q=85,strip]';
+        $tmp = dirname($path) . '/.mpt-vips-' . bin2hex(random_bytes(6)) . '.' . $extension;
+
+        $out = [];
+        exec(escapeshellarg($vips) . ' ' . escapeshellarg($path) . ' --size ' . escapeshellarg($size) . ' -o ' . escapeshellarg($tmp . $options) . ' 2>&1', $out, $ret);
+        if (0 !== $ret || !is_file($tmp) || 0 === (int) filesize($tmp) || false === @getimagesize($tmp)) {
+            @unlink($tmp);
+            if ([] !== $out) {
+                rex_logger::factory()->log('warning', 'mediapool_tools libvips: ' . implode(' ', $out), [], __FILE__, __LINE__);
+            }
+
+            return false;
+        }
+        @chmod($tmp, fileperms($path) & 0777);
+        if (!@rename($tmp, $path)) {
+            @unlink($tmp);
+
+            return false;
+        }
+        self::updateMediaInfo($filename);
+
+        return true;
+    }
+
     public static function reworkFileWithImageMagick(string $filename, ?int $maxWidth = null, ?int $maxHeight = null): bool
     {
         if (!self::hasImageMagick()) {

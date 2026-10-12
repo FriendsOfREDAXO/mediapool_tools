@@ -26,6 +26,9 @@ $hitsPerPage = $this->getConfig('bulk-rework-hits-per-page', 200);
 
 // Zeige Informationen über verfügbare Bildverarbeitungsbibliotheken
 $imageLibInfo = [];
+if (BulkRework::hasVips()) {
+    $imageLibInfo[] = '<span class=""><i class="rex-icon fa-check"></i> libvips verfügbar (wird zuerst genutzt)</span>';
+}
 if (BulkRework::hasGD()) {
     $imageLibInfo[] = '<span class=""><i class="rex-icon fa-check"></i> GD verfügbar</span>';
 }
@@ -38,7 +41,7 @@ if (BulkRework::hasImageMagick()) {
 }
 
 if (!empty($imageLibInfo)) {
-    echo rex_view::info('Verfügbare Bildverarbeitungsbibliotheken: ' . implode(', ', $imageLibInfo));
+    echo rex_view::info('Verfügbare Bildverarbeitungsbibliotheken: ' . implode(', ', $imageLibInfo) . '<br><small>Reihenfolge: libvips → ImageMagick → GD (letzte Lösung).</small>');
 }
 
 // Bereinige alte Batch-Dateien

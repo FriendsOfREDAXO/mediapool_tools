@@ -30,6 +30,8 @@ Skaliert nachträglich Bilder im Medienpool, die definierte Maximalmaße übersc
 *   Ideal um "Altlasten" zu optimieren.
 *   Grenzwerte für Breite/Höhe konfigurierbar.
 *   Zeigt Einsparungspotential an.
+*   **Bildbibliotheken in dieser Reihenfolge:** **libvips** (Programm `vipsthumbnail`, Paket `libvips-tools` – schnell und sparsam, auch bei sehr großen Fotos) → **ImageMagick** (PHP-Extension `imagick`, sonst Programm `convert`) → **GD** als letzte Lösung. Scheitert ein Weg, wird der nächste versucht; die Seite zeigt, was verfügbar ist.
+*   Hochformat-Fotos mit EXIF-Drehung bleiben in allen drei Wegen richtig herum.
 
 ### 3. Duplicate Finder (Doppelte Dateien)
 Findet identische Dateien im Medienpool basierend auf Dateigröße und Inhalt (MD5-Hash).
