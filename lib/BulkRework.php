@@ -434,7 +434,12 @@ class BulkRework
         
         $imagePath = rex_path::media($filename);
         $imageSizes = getimagesize($imagePath);
-        
+        $orientation = self::exifOrientation($imagePath, $filename);
+        if (is_array($imageSizes) && $orientation >= 5) {
+            // EXIF 5–8: Bild steht um 90° gedreht – sichtbare Breite/Höhe sind vertauscht (Issue #6)
+            [$imageSizes[0], $imageSizes[1]] = [$imageSizes[1], $imageSizes[0]];
+        }
+
         if (
             !is_array($imageSizes) ||
             $imageSizes[0] == 0 ||
@@ -575,7 +580,12 @@ class BulkRework
         
         $imagePath = rex_path::media($filename);
         $imageSizes = getimagesize($imagePath);
-        
+        $orientation = self::exifOrientation($imagePath, $filename);
+        if (is_array($imageSizes) && $orientation >= 5) {
+            // EXIF 5–8: Bild steht um 90° gedreht – sichtbare Breite/Höhe sind vertauscht (Issue #6)
+            [$imageSizes[0], $imageSizes[1]] = [$imageSizes[1], $imageSizes[0]];
+        }
+
         if (
             !is_array($imageSizes) ||
             $imageSizes[0] == 0 ||
@@ -597,6 +607,9 @@ class BulkRework
         if (!$image) {
             return false;
         }
+        // GD ignoriert EXIF-Orientation und schreibt ohne EXIF – Pixel daher vorher richtig drehen,
+        // sonst liegt das Original danach quer (Issue #6). Imagick und convert machen das bereits.
+        $image = self::applyExifOrientation($image, $orientation);
 
         $currentWidth = imagesx($image);
         $currentHeight = imagesy($image);
@@ -658,6 +671,62 @@ class BulkRework
         }
         
         return false;
+    }
+
+    /**
+     * EXIF-Orientation (1–8) einer JPEG-Datei, 1 wenn unbekannt oder kein JPEG.
+     */
+    private static function exifOrientation(string $path, string $filename): int
+    {
+        if (!in_array(strtolower(rex_file::extension($filename)), ['jpg', 'jpeg'], true) || !function_exists('exif_read_data')) {
+            return 1;
+        }
+        $exif = @exif_read_data($path);
+        $orientation = is_array($exif) ? (int) ($exif['Orientation'] ?? 1) : 1;
+
+        return $orientation >= 1 && $orientation <= 8 ? $orientation : 1;
+    }
+
+    /**
+     * Dreht/spiegelt ein GD-Bild entsprechend der EXIF-Orientation, sodass die Pixel aufrecht stehen.
+     *
+     * @param \GdImage|resource $image
+     * @return \GdImage|resource
+     */
+    private static function applyExifOrientation($image, int $orientation)
+    {
+        $rotate = static function ($img, int $angle) {
+            $rotated = imagerotate($img, $angle, 0);
+
+            return false === $rotated ? $img : $rotated;
+        };
+        switch ($orientation) {
+            case 2:
+                imageflip($image, IMG_FLIP_HORIZONTAL);
+                break;
+            case 3:
+                $image = $rotate($image, 180);
+                break;
+            case 4:
+                imageflip($image, IMG_FLIP_VERTICAL);
+                break;
+            case 5:
+                $image = $rotate($image, -90);
+                imageflip($image, IMG_FLIP_HORIZONTAL);
+                break;
+            case 6:
+                $image = $rotate($image, -90);
+                break;
+            case 7:
+                $image = $rotate($image, 90);
+                imageflip($image, IMG_FLIP_HORIZONTAL);
+                break;
+            case 8:
+                $image = $rotate($image, 90);
+                break;
+        }
+
+        return $image;
     }
 
     private static function updateMediaInfo(string $filename): void
