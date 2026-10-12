@@ -30,6 +30,8 @@ Skaliert nachträglich Bilder im Medienpool, die definierte Maximalmaße übersc
 *   Ideal um "Altlasten" zu optimieren.
 *   Grenzwerte für Breite/Höhe konfigurierbar.
 *   Zeigt Einsparungspotential an.
+*   **Bildbibliotheken in dieser Reihenfolge:** **libvips** (Programm `vipsthumbnail`, Paket `libvips-tools` – schnell und sparsam, auch bei sehr großen Fotos) → **ImageMagick** (PHP-Extension `imagick`, sonst Programm `convert`) → **GD** als letzte Lösung. Scheitert ein Weg, wird der nächste versucht; die Seite zeigt, was verfügbar ist.
+*   Hochformat-Fotos mit EXIF-Drehung bleiben in allen drei Wegen richtig herum.
 
 ### 3. Duplicate Finder (Doppelte Dateien)
 Findet identische Dateien im Medienpool basierend auf Dateigröße und Inhalt (MD5-Hash).
@@ -40,6 +42,24 @@ Findet identische Dateien im Medienpool basierend auf Dateigröße und Inhalt (M
     *   Der Scanner durchsucht dabei, ähnlich wie der "Unused Media Finder", alle Tabellen nach Vorkommen des Dateinamens.
 *   **Sicher**: Cache wird nach dem Vorgang automatisch geleert, damit Änderungen sofort sichtbar sind.
 *   **Übersichtlich**: Gruppierte Darstellung aller Duplikate inkl. Vorschau und Link zum Medienpool.
+
+### 4. Defekte Dateien
+Findet Dateien im Medienpool, die kaputt oder falsch benannt sind – solche Dateien werden falsch ausgegeben und lassen z. B. die KI-Bildbeschreibung (mediaplace) mit „Bad Request“ scheitern.
+
+**Erkennt:**
+*   **Datei fehlt**: Eintrag im Medienpool, aber keine Datei auf dem Server.
+*   **Leer**: Datei mit 0 Byte (fehlgeschlagener Upload).
+*   **Falsche Endung**: Inhalt passt nicht zur Endung, z. B. ein PDF als `.jpg` oder ein PNG als `.jpg` – mit Vorschlag für die richtige Endung.
+*   **Beschädigt**: Bild lässt sich nicht lesen oder ist abgeschnitten (JPEG ohne Endmarke, PNG ohne IEND). Handyfotos mit angehängten Daten hinter der Endmarke (z. B. Samsung „SEFT“, Bewegungsfotos) werden per Probe-Dekodierung erkannt und nicht als defekt gemeldet.
+*   **Angaben veraltet**: Größe, Typ oder Abmessungen im Medienpool weichen von der Datei ab.
+*   **Verwaiste Dateien**: im Medienordner ohne Eintrag im Medienpool (nur als Hinweis, ohne Aktion).
+
+**Aktionen je Datei:**
+*   **Endung korrigieren**: Datei wird unter dem richtigen Namen angelegt, **alle Verweise in der Datenbank** werden Tabelle für Tabelle umgestellt (wie beim Duplicate Finder), danach Eintrag umbenannt und alte Datei entfernt.
+*   **Angaben korrigieren**: Größe, Typ und Abmessungen aus der Datei übernehmen.
+*   **Löschen**: nur, wenn die Datei nirgends verwendet wird (Prüfung des Medienpools).
+
+Die Prüfung läuft in Etappen und hält auch große Medienpools aus; die Liste zeigt die schwersten Befunde zuerst (höchstens 300 Zeilen). Recht: `mediapool_tools[broken_media]`.
 
 ## Installation
 

@@ -2,6 +2,20 @@
 
 Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.2.0] - 2026-10-12
+
+### Hinzugefügt
+- **Defekte Dateien** (Medienpool → Tools): findet fehlende, leere, falsch benannte (Inhalt passt nicht zur Endung) und beschädigte bzw. abgeschnittene Dateien, veraltete Angaben (Größe/Typ/Abmessungen) und verwaiste Dateien im Medienordner.
+    - Aktionen: Endung korrigieren (inkl. Umstellen aller Verweise in der Datenbank), Angaben korrigieren, Löschen (nur unbenutzte).
+    - Handyfotos mit Zusatzdaten hinter der JPEG-Endmarke (Samsung „SEFT“, Bewegungsfotos) gelten nicht als defekt.
+    - Läuft in Etappen, API mit CSRF-Schutz, neues Recht `mediapool_tools[broken_media]`.
+
+- **Bulk-Resize mit libvips**: `vipsthumbnail` wird zuerst genutzt (JPG/PNG/WebP), dann ImageMagick (Extension oder `convert`), GD nur noch als letzte Lösung. Scheitert ein Weg, übernimmt der nächste. Vorher lief JPG/PNG/GIF/WebP immer über GD, auch wenn Imagick vorhanden war.
+- Bulk-Resize überspringt Bilder, die schon klein genug sind (mit Hinweis statt Fehlermeldung).
+
+### Behoben
+- **Bulk-Resize ohne Imagick (GD) drehte Hochformat-Fotos quer** ([#6](https://github.com/FriendsOfREDAXO/mediapool_tools/issues/6)): Die EXIF-Orientation (1–8) wird jetzt vor dem Verkleinern auf die Pixel angewendet, da GD sie ignoriert und ohne EXIF speichert. Außerdem prüft die „muss verkleinert werden?“-Abfrage bei gedrehten Fotos die sichtbaren (vertauschten) Maße – auch im Imagick-Pfad.
+
 ## [1.0.0] - 2026-01-30
 
 ### Hinzugefügt
