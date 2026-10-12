@@ -41,6 +41,24 @@ Findet identische Dateien im Medienpool basierend auf Dateigröße und Inhalt (M
 *   **Sicher**: Cache wird nach dem Vorgang automatisch geleert, damit Änderungen sofort sichtbar sind.
 *   **Übersichtlich**: Gruppierte Darstellung aller Duplikate inkl. Vorschau und Link zum Medienpool.
 
+### 4. Defekte Dateien
+Findet Dateien im Medienpool, die kaputt oder falsch benannt sind – solche Dateien werden falsch ausgegeben und lassen z. B. die KI-Bildbeschreibung (mediaplace) mit „Bad Request“ scheitern.
+
+**Erkennt:**
+*   **Datei fehlt**: Eintrag im Medienpool, aber keine Datei auf dem Server.
+*   **Leer**: Datei mit 0 Byte (fehlgeschlagener Upload).
+*   **Falsche Endung**: Inhalt passt nicht zur Endung, z. B. ein PDF als `.jpg` oder ein PNG als `.jpg` – mit Vorschlag für die richtige Endung.
+*   **Beschädigt**: Bild lässt sich nicht lesen oder ist abgeschnitten (JPEG ohne Endmarke, PNG ohne IEND). Handyfotos mit angehängten Daten hinter der Endmarke (z. B. Samsung „SEFT“, Bewegungsfotos) werden per Probe-Dekodierung erkannt und nicht als defekt gemeldet.
+*   **Angaben veraltet**: Größe, Typ oder Abmessungen im Medienpool weichen von der Datei ab.
+*   **Verwaiste Dateien**: im Medienordner ohne Eintrag im Medienpool (nur als Hinweis, ohne Aktion).
+
+**Aktionen je Datei:**
+*   **Endung korrigieren**: Datei wird unter dem richtigen Namen angelegt, **alle Verweise in der Datenbank** werden Tabelle für Tabelle umgestellt (wie beim Duplicate Finder), danach Eintrag umbenannt und alte Datei entfernt.
+*   **Angaben korrigieren**: Größe, Typ und Abmessungen aus der Datei übernehmen.
+*   **Löschen**: nur, wenn die Datei nirgends verwendet wird (Prüfung des Medienpools).
+
+Die Prüfung läuft in Etappen und hält auch große Medienpools aus; die Liste zeigt die schwersten Befunde zuerst (höchstens 300 Zeilen). Recht: `mediapool_tools[broken_media]`.
+
 ## Installation
 
 1.  Paket installieren und aktivieren.

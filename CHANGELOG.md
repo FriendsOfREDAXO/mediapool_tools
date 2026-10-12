@@ -2,6 +2,14 @@
 
 Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.2.0] - 2026-10-12
+
+### Hinzugefügt
+- **Defekte Dateien** (Medienpool → Tools): findet fehlende, leere, falsch benannte (Inhalt passt nicht zur Endung) und beschädigte bzw. abgeschnittene Dateien, veraltete Angaben (Größe/Typ/Abmessungen) und verwaiste Dateien im Medienordner.
+    - Aktionen: Endung korrigieren (inkl. Umstellen aller Verweise in der Datenbank), Angaben korrigieren, Löschen (nur unbenutzte).
+    - Handyfotos mit Zusatzdaten hinter der JPEG-Endmarke (Samsung „SEFT“, Bewegungsfotos) gelten nicht als defekt.
+    - Läuft in Etappen, API mit CSRF-Schutz, neues Recht `mediapool_tools[broken_media]`.
+
 ## [1.0.0] - 2026-01-30
 
 ### Hinzugefügt

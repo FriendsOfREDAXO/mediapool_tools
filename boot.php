@@ -8,11 +8,13 @@ if (rex::isBackend() && rex::getUser()) {
     rex_perm::register('mediapool_tools[bulk_rework]');
     rex_perm::register('mediapool_tools[unused_media]');
     rex_perm::register('mediapool_tools[duplicates]');
+    rex_perm::register('mediapool_tools[broken_media]');
 
     // API explizit registrieren
     rex_api_function::register('mediapool_tools_bulk_process', FriendsOfRedaxo\MediapoolTools\ApiBulkProcess::class);
     rex_api_function::register('mediapool_tools_unused_media', FriendsOfRedaxo\MediapoolTools\ApiUnusedMedia::class);
     rex_api_function::register('mediapool_tools_duplicates', FriendsOfRedaxo\MediapoolTools\ApiDuplicates::class);
+    rex_api_function::register('mediapool_tools_broken_media', FriendsOfRedaxo\MediapoolTools\ApiBrokenMedia::class);
     
     // Subpages in Mediapool einhängen
     rex_extension::register('PAGES_PREPARED', function () {
@@ -49,6 +51,14 @@ if (rex::isBackend() && rex::getUser()) {
                 $added = true;
             }
 
+            if (rex::getUser()->hasPerm('mediapool_tools[broken_media]')) {
+                $tools->addSubpage((new rex_be_page('broken_media', $addon->i18n('broken_media_title')))
+                    ->setSubPath($addon->getPath('pages/broken_media.php'))
+                    ->setIcon('rex-icon fa-chain-broken')
+                );
+                $added = true;
+            }
+
             if (rex::getUser()->hasPerm('mediapool_tools[config]')) {
                 $tools->addSubpage((new rex_be_page('config', $addon->i18n('config')))
                     ->setSubPath($addon->getPath('pages/config.php'))
@@ -72,6 +82,10 @@ if (rex::isBackend() && rex::getUser()) {
     
     if ($page === 'mediapool/tools/unused_media') {
         rex_view::addJsFile($addon->getAssetsUrl('unused_media.js'));
+    }
+
+    if ($page === 'mediapool/tools/broken_media') {
+        rex_view::addJsFile($addon->getAssetsUrl('broken_media.js'));
     }
 }
 
