@@ -42,6 +42,15 @@ class ApiBrokenMedia extends rex_api_function
                 BrokenMediaAnalysis::fixMetadata($file);
                 rex_response::sendJson(['success' => true, 'message' => $this->i18n('broken_media_fixed', $file)]);
                 exit;
+            case 'fix_meta_batch':
+                $fixed = 0;
+                foreach (array_slice(rex_request('files', 'array', []), 0, 100) as $file) {
+                    if (is_string($file) && rex_media::get($file) && BrokenMediaAnalysis::fixMetadata($file)) {
+                        ++$fixed;
+                    }
+                }
+                rex_response::sendJson(['success' => true, 'fixed' => $fixed]);
+                exit;
             case 'delete':
                 $file = $this->mediaFile();
                 try {

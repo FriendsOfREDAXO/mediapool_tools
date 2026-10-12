@@ -121,3 +121,7 @@ mediapool_tools_broken_media_error = An error occurred.
 mediapool_tools_broken_media_orphans_title = {0} files in the media folder without media pool entry
 mediapool_tools_broken_media_orphans_hint = For information only: some files are placed in the media folder on purpose (e.g. by templates or other add-ons). Check whether they are needed before deleting them via FTP.
 mediapool_tools_broken_media_more_rows = … and {0} more. Fix the ones shown first and run the check again.
+mediapool_tools_broken_media_btn_fix_all = Fix all {0} outdated entries
+mediapool_tools_broken_media_confirm_fix_all = Take size, type and dimensions of {0} files from the files themselves?
+mediapool_tools_broken_media_fixing_all = Fixing data...
+mediapool_tools_broken_media_fixed_all = {0} entries fixed.

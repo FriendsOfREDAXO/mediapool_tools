@@ -21,6 +21,9 @@ var mediapool_tools_i18n_broken = ' . json_encode([
     'confirm_delete' => $addon->i18n('broken_media_confirm_delete'),
     'confirm_rename' => $addon->i18n('broken_media_confirm_rename'),
     'renaming' => $addon->i18n('broken_media_renaming'),
+    'confirm_fix_all' => $addon->i18n('broken_media_confirm_fix_all'),
+    'fixing_all' => $addon->i18n('broken_media_fixing_all'),
+    'fixed_all' => $addon->i18n('broken_media_fixed_all'),
     'error' => $addon->i18n('broken_media_error'),
 ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) . ';
 </script>';
